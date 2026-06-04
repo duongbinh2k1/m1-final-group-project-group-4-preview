@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mushroom Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f0e;
+    --bg2: #141714;
+    --bg3: #1a1d1a;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #e8ede8;
+    --muted: #6b7a6b;
+    --green: #4ade80;
+    --green2: #1a9e50;
+    --amber: #f59e0b;
+    --red: #f87171;
+    --blue: #60a5fa;
+    --teal: #2dd4bf;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 28px; height: 28px;
+    background: var(--green2);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+  }
+
+  .badge.connected { border-color: var(--green2); color: var(--green); }
+  .badge.error     { border-color: #7f1d1d; color: var(--red); }
+
+  main { padding: 28px 32px; max-width: 960px; }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .metric-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    transition: border-color 0.3s;
+  }
+
+  .metric-card .label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .metric-card .value {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+    transition: color 0.4s;
+  }
+
+  .metric-card .unit {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 5px;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 8px 18px;
+    border-radius: 6px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .btn:hover { background: var(--bg3); border-color: rgba(255,255,255,0.2); }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+  .btn.primary {
+    background: var(--green2);
+    border-color: var(--green2);
+    color: #fff;
+  }
+  .btn.primary:hover { background: #1db55c; }
+
+  .btn.danger {
+    border-color: #7f1d1d;
+    color: var(--red);
+  }
+  .btn.danger:hover { background: rgba(248,113,113,0.08); }
+
+  .slider-group {
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .slider-group label {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 110px;
+    height: 4px;
+    background: var(--bg3);
+    border-radius: 2px;
+    outline: none;
+    border: 1px solid var(--border2);
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--green);
+    cursor: pointer;
+  }
+
+  select {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 7px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    outline: none;
+  }
+
+  select:focus { border-color: var(--green2); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  .panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .panel-header .clear-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .panel-header .clear-btn:hover { color: var(--text); }
+
+  #log {
+    font-size: 11px;
+    padding: 12px 14px;
+    height: 280px;
+    overflow-y: auto;
+    line-height: 1.8;
+    color: var(--muted);
+  }
+
+  #log .log-line { display: flex; gap: 8px; }
+  #log .log-ts   { color: #3d4d3d; min-width: 85px; }
+  #log .log-env  { color: var(--teal); }
+  #log .log-dev  { color: var(--amber); }
+  #log .log-ai   { color: var(--green); }
+  #log .log-ai.contaminated { color: var(--red); }
+
+  #mqtt-info { padding: 14px 16px; font-size: 11px; line-height: 2; }
+  #mqtt-info .row { display: flex; justify-content: space-between; }
+  #mqtt-info .key { color: var(--muted); }
+  #mqtt-info .val { color: var(--text); font-weight: 500; }
+  #mqtt-info .val.ok { color: var(--green); }
+  #mqtt-info .val.err { color: var(--red); }
+
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--muted); display: inline-block;
+    margin-right: 6px;
+    transition: background 0.3s;
+  }
+  .dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+  .tick-counter {
+    font-size: 11px;
+    color: var(--muted);
+    padding: 0 8px;
+  }
+
+  @media (max-width: 700px) {
+    .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+    main { padding: 20px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🍄</div>
+    Mushroom Simulator
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <span class="tick-counter" id="tick-counter">tick: 0</span>
+    <span class="badge" id="mqtt-badge">MQTT: —</span>
+  </div>
+</header>
+
+<main>
+  <div class="section-label">sensor readings</div>
+
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="label">Temperature</div>
+      <div class="value" id="val-temp">—</div>
+      <div class="unit">°C</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Humidity</div>
+      <div class="value" id="val-hum">—</div>
+      <div class="unit">%</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Fan</div>
+      <div class="value" id="val-fan">—</div>
+      <div class="unit"><span class="dot" id="dot-fan"></span>relay</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Mist</div>
+      <div class="value" id="val-mist">—</div>
+      <div class="unit"><span class="dot" id="dot-mist"></span>relay</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">AI Stage</div>
+      <div class="value" id="val-stage" style="font-size:18px;">—</div>
+      <div class="unit" id="val-conf">conf: —</div>
+    </div>
+  </div>
+
+  <div class="controls-row">
+    <button class="btn primary" id="btn-start" onclick="start()">▶ Start</button>
+    <button class="btn danger"  id="btn-stop"  onclick="stop()" disabled>⏹ Stop</button>
+
+    <div class="slider-group">
+      <label>Interval</label>
+      <input type="range" id="interval-slider" min="500" max="5000" step="500" value="1000"
+             oninput="onInterval(this.value)">
+      <span id="interval-out" style="font-size:12px;min-width:32px;">1s</span>
+    </div>
+
+    <select id="scenario" onchange="onScenario(this.value)">
+      <option value="normal">Normal grow</option>
+      <option value="hot">Overheating</option>
+      <option value="dry">Too dry</option>
+      <option value="contamination">Contamination</option>
+    </select>
+  </div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-header">
+        <span>MQTT topics · payload log</span>
+        <button class="clear-btn" onclick="clearLog()">clear</button>
+      </div>
+      <div id="log"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span>MQTT connection info</span>
+      </div>
+      <div id="mqtt-info">
+        <div class="row"><span class="key">status</span><span class="val" id="info-status">—</span></div>
+        <div class="row"><span class="key">broker</span><span class="val" id="info-broker">—</span></div>
+        <div class="row"><span class="key">topic env</span><span class="val" id="info-t1" style="font-size:10px;">—</span></div>
+        <div class="row"><span class="key">topic devices</span><span class="val" id="info-t2" style="font-size:10px;">—</span></div>
+        <div class="row"><span class="key">topic ai</span><span class="val" id="info-t3" style="font-size:10px;">—</span></div>
+        <div class="row" style="margin-top:8px;"><span class="key">total ticks</span><span class="val" id="info-ticks">0</span></div>
+        <div class="row"><span class="key">running</span><span class="val" id="info-running">false</span></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+let running = false;
+let pollTimer = null;
+
+const STAGE_COLORS = {
+  pinning:      '#60a5fa',
+  growing:      '#4ade80',
+  mature:       '#f59e0b',
+  overgrown:    '#fb923c',
+  contaminated: '#f87171',
+};
+
+async function start() {
+  const interval = parseInt(document.getElementById('interval-slider').value);
+  const scenario = document.getElementById('scenario').value;
+  const res = await fetch('/api/start', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ interval, scenario }),
+  });
+  const data = await res.json();
+  if (data.ok) {
+    running = true;
+    document.getElementById('btn-start').disabled = true;
+    document.getElementById('btn-stop').disabled = false;
+    startPolling();
+  }
+}
+
+async function stop() {
+  const res = await fetch('/api/stop', { method: 'POST' });
+  const data = await res.json();
+  if (data.ok) {
+    running = false;
+    document.getElementById('btn-start').disabled = false;
+    document.getElementById('btn-stop').disabled = true;
+  }
+}
+
+async function onInterval(val) {
+  document.getElementById('interval-out').textContent = (val / 1000).toFixed(1) + 's';
+  await fetch('/api/interval', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ interval: parseInt(val) }),
+  });
+}
+
+async function onScenario(val) {
+  await fetch('/api/scenario', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ scenario: val }),
+  });
+}
+
+let lastTick = -1;
+
+async function pollStatus() {
+  try {
+    const [statusRes, logRes] = await Promise.all([
+      fetch('/api/status'),
+      fetch('/api/log'),
+    ]);
+    const status = await statusRes.json();
+    const logs   = await logRes.json();
+
+    updateMQTTBadge(status.mqttStatus);
+    updateInfoPanel(status);
+
+    if (status.lastPayload && status.tick !== lastTick) {
+      lastTick = status.tick;
+      updateMetrics(status.lastPayload);
+      document.getElementById('tick-counter').textContent = `tick: ${status.tick}`;
+    }
+
+    updateLog(logs);
+
+  } catch (e) {
+    console.error('Poll error', e);
+  }
+}
+
+function updateMQTTBadge(mqttStatus) {
+  const badge = document.getElementById('mqtt-badge');
+  badge.textContent = `MQTT: ${mqttStatus}`;
+  badge.className = 'badge';
+  if (mqttStatus === 'connected') badge.classList.add('connected');
+  if (mqttStatus === 'error')     badge.classList.add('error');
+}
+
+function updateInfoPanel(s) {
+  const statusEl = document.getElementById('info-status');
+  statusEl.textContent = s.mqttStatus;
+  statusEl.className = 'val ' + (s.mqttStatus === 'connected' ? 'ok' : 'err');
+  document.getElementById('info-broker').textContent  = s.mqttBroker;
+  document.getElementById('info-t1').textContent      = s.topics?.env     || '—';
+  document.getElementById('info-t2').textContent      = s.topics?.devices || '—';
+  document.getElementById('info-t3').textContent      = s.topics?.ai      || '—';
+  document.getElementById('info-ticks').textContent   = s.tick;
+  document.getElementById('info-running').textContent = s.isRunning ? 'true' : 'false';
+}
+
+function updateMetrics(p) {
+  const temp = p.environment.air_temperature;
+  const hum  = p.environment.air_humidity;
+  const fan  = p.devices.fan;
+  const mist = p.devices.mist;
+  const stage = p.ai.stage;
+  const conf  = p.ai.confidence;
+
+  const tempEl = document.getElementById('val-temp');
+  tempEl.textContent = temp.toFixed(1);
+  tempEl.style.color = temp > 30 ? '#f87171' : temp < 22 ? '#60a5fa' : '#e8ede8';
+
+  const humEl = document.getElementById('val-hum');
+  humEl.textContent = hum.toFixed(1);
+  humEl.style.color = hum < 70 ? '#f59e0b' : hum > 92 ? '#60a5fa' : '#e8ede8';
+
+  document.getElementById('val-fan').textContent  = fan  ? 'ON' : 'OFF';
+  document.getElementById('val-mist').textContent = mist ? 'ON' : 'OFF';
+  document.getElementById('val-fan').style.color  = fan  ? '#f59e0b' : '#6b7a6b';
+  document.getElementById('val-mist').style.color = mist ? '#2dd4bf' : '#6b7a6b';
+
+  const dotFan  = document.getElementById('dot-fan');
+  const dotMist = document.getElementById('dot-mist');
+  dotFan.className  = 'dot' + (fan  ? ' on' : '');
+  dotMist.className = 'dot' + (mist ? ' on' : '');
+
+  const stageEl = document.getElementById('val-stage');
+  stageEl.textContent = stage;
+  stageEl.style.color = STAGE_COLORS[stage] || '#e8ede8';
+  document.getElementById('val-conf').textContent = `conf: ${(conf * 100).toFixed(0)}%`;
+}
+
+let renderedCount = 0;
+
+function updateLog(logs) {
+  if (logs.length === 0) return;
+  const newLogs = logs.slice(0, logs.length - renderedCount);
+  if (newLogs.length === 0) return;
+
+  const logEl = document.getElementById('log');
+  const atBottom = logEl.scrollHeight - logEl.scrollTop - logEl.clientHeight < 40;
+
+  newLogs.reverse().forEach(entry => {
+    const ts = new Date(entry.timestamp * 1000).toISOString().substr(11, 8);
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    line.innerHTML = `
+      <span class="log-ts">${ts}</span>
+      <span class="log-env">${entry.environment.air_temperature}°C ${entry.environment.air_humidity}%</span>
+      <span class="log-dev">fan:${entry.devices.fan?'1':'0'} mist:${entry.devices.mist?'1':'0'}</span>
+      <span class="log-ai ${entry.ai.stage}">${entry.ai.stage}(${(entry.ai.confidence*100).toFixed(0)}%)</span>
+    `;
+    logEl.appendChild(line);
+  });
+
+  renderedCount = logs.length;
+  const allLines = logEl.querySelectorAll('.log-line');
+  if (allLines.length > 120) {
+    for (let i = 0; i < allLines.length - 100; i++) allLines[i].remove();
+    renderedCount = 100;
+  }
+
+  if (atBottom) logEl.scrollTop = logEl.scrollHeight;
+}
+
+function clearLog() {
+  document.getElementById('log').innerHTML = '';
+  renderedCount = 0;
+}
+
+function startPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(pollStatus, 800);
+}
+
+pollStatus();
+startPolling();
+</script>
+
+</body>
+</html>

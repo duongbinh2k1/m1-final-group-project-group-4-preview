@@ -1,0 +1,12 @@
+fastapi==0.136.1
+uvicorn==0.47.0
+paho-mqtt==2.1.0
+python-socketio==5.16.1
+websockets==16.0
+pydantic-settings==2.10.1
+python-dotenv==1.1.0
+python-jose[cryptography]==3.3.0
+bcrypt>=4.0.0
+python-multipart==0.0.17
+# HTTP client — used by Supabase REST calls and Telegram notifier
+httpx>=0.26.0
