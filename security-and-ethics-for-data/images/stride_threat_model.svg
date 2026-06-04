@@ -1,0 +1,158 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 540" font-family="Arial, sans-serif">
+  <rect width="760" height="540" fill="#0f172a" rx="12"/>
+
+  <!-- Title -->
+  <text x="380" y="34" text-anchor="middle" fill="#f1f5f9" font-size="15" font-weight="bold">STRIDE Threat Model</text>
+  <text x="380" y="52" text-anchor="middle" fill="#94a3b8" font-size="11">Applied to the Environmental Monitoring Data Pipeline</text>
+
+  <!-- Header row -->
+  <rect x="20" y="66" width="100" height="32" rx="4" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="70" y="87" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="bold">Category</text>
+
+  <rect x="124" y="66" width="160" height="32" rx="4" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="204" y="87" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="bold">Threat</text>
+
+  <rect x="288" y="66" width="240" height="32" rx="4" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="408" y="87" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="bold">Example in Việt An Case</text>
+
+  <rect x="532" y="66" width="80" height="32" rx="4" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="572" y="87" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="bold">Severity</text>
+
+  <rect x="616" y="66" width="124" height="32" rx="4" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="678" y="87" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="bold">Mitigation</text>
+
+  <!-- ===== ROW DATA ===== -->
+  <!-- S — Spoofing -->
+  <rect x="20"  y="102" width="100" height="56" rx="4" fill="#2d1a3a" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="70"  y="122" text-anchor="middle" fill="#d8b4fe" font-size="12" font-weight="bold">S</text>
+  <text x="70"  y="138" text-anchor="middle" fill="#d8b4fe" font-size="9">Spoofing</text>
+  <text x="70"  y="152" text-anchor="middle" fill="#94a3b8" font-size="9">Identity</text>
+
+  <rect x="124" y="102" width="160" height="56" rx="4" fill="#1e1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="204" y="124" text-anchor="middle" fill="#e2e8f0" font-size="10">Impersonating a</text>
+  <text x="204" y="138" text-anchor="middle" fill="#e2e8f0" font-size="10">legitimate data source</text>
+  <text x="204" y="152" text-anchor="middle" fill="#e2e8f0" font-size="10">or certifying body</text>
+
+  <rect x="288" y="102" width="240" height="56" rx="4" fill="#1e1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="408" y="122" text-anchor="middle" fill="#c4b5fd" font-size="10">Forged calibration certificates</text>
+  <text x="408" y="136" text-anchor="middle" fill="#94a3b8" font-size="10">presented as genuine documents</text>
+  <text x="408" y="150" text-anchor="middle" fill="#94a3b8" font-size="10">from accredited laboratories</text>
+
+  <rect x="532" y="102" width="80" height="56" rx="4" fill="#3b1a1a" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="572" y="133" text-anchor="middle" fill="#fca5a5" font-size="10" font-weight="bold">HIGH</text>
+
+  <rect x="616" y="102" width="124" height="56" rx="4" fill="#1e1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="678" y="120" text-anchor="middle" fill="#94a3b8" font-size="9">Digital signatures</text>
+  <text x="678" y="133" text-anchor="middle" fill="#94a3b8" font-size="9">on certificates;</text>
+  <text x="678" y="146" text-anchor="middle" fill="#94a3b8" font-size="9">PKI chain of trust</text>
+
+  <!-- T — Tampering -->
+  <rect x="20"  y="162" width="100" height="56" rx="4" fill="#3b0a0a" stroke="#ef4444" stroke-width="2"/>
+  <text x="70"  y="182" text-anchor="middle" fill="#fca5a5" font-size="12" font-weight="bold">T</text>
+  <text x="70"  y="198" text-anchor="middle" fill="#fca5a5" font-size="9">Tampering</text>
+  <text x="70"  y="212" text-anchor="middle" fill="#94a3b8" font-size="9">Data integrity</text>
+
+  <rect x="124" y="162" width="160" height="56" rx="4" fill="#1e1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="204" y="182" text-anchor="middle" fill="#e2e8f0" font-size="10">Modifying sensor values</text>
+  <text x="204" y="196" text-anchor="middle" fill="#e2e8f0" font-size="10">in transit or at rest in</text>
+  <text x="204" y="210" text-anchor="middle" fill="#e2e8f0" font-size="10">the database</text>
+
+  <rect x="288" y="162" width="240" height="56" rx="4" fill="#1e1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="408" y="180" text-anchor="middle" fill="#fca5a5" font-size="10">Raw data edited on logger laptop;</text>
+  <text x="408" y="194" text-anchor="middle" fill="#94a3b8" font-size="10">DB admin UPDATE on historical</text>
+  <text x="408" y="208" text-anchor="middle" fill="#94a3b8" font-size="10">records; report values overwritten</text>
+
+  <rect x="532" y="162" width="80" height="56" rx="4" fill="#4a0a0a" stroke="#ef4444" stroke-width="2"/>
+  <text x="572" y="190" text-anchor="middle" fill="#fca5a5" font-size="10" font-weight="bold">CRITICAL</text>
+  <text x="572" y="205" text-anchor="middle" fill="#fca5a5" font-size="9">★ Primary</text>
+
+  <rect x="616" y="162" width="124" height="56" rx="4" fill="#1e1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="678" y="180" text-anchor="middle" fill="#94a3b8" font-size="9">HMAC signing at source;</text>
+  <text x="678" y="193" text-anchor="middle" fill="#94a3b8" font-size="9">append-only DB;</text>
+  <text x="678" y="206" text-anchor="middle" fill="#94a3b8" font-size="9">blockchain audit log</text>
+
+  <!-- R — Repudiation -->
+  <rect x="20"  y="222" width="100" height="56" rx="4" fill="#1a2a1a" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="70"  y="242" text-anchor="middle" fill="#86efac" font-size="12" font-weight="bold">R</text>
+  <text x="70"  y="258" text-anchor="middle" fill="#86efac" font-size="9">Repudiation</text>
+  <text x="70"  y="272" text-anchor="middle" fill="#94a3b8" font-size="9">Audit / logging</text>
+
+  <rect x="124" y="222" width="160" height="56" rx="4" fill="#1e1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="204" y="244" text-anchor="middle" fill="#e2e8f0" font-size="10">Denying responsibility</text>
+  <text x="204" y="258" text-anchor="middle" fill="#e2e8f0" font-size="10">for data modifications</text>
+  <text x="204" y="272" text-anchor="middle" fill="#e2e8f0" font-size="10">or skipped sessions</text>
+
+  <rect x="288" y="222" width="240" height="56" rx="4" fill="#1e1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="408" y="240" text-anchor="middle" fill="#86efac" font-size="10">No immutable audit log; technicians</text>
+  <text x="408" y="254" text-anchor="middle" fill="#94a3b8" font-size="10">could deny making changes; no</text>
+  <text x="408" y="268" text-anchor="middle" fill="#94a3b8" font-size="10">record of skipped measurements</text>
+
+  <rect x="532" y="222" width="80" height="56" rx="4" fill="#3b1a1a" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="572" y="253" text-anchor="middle" fill="#fca5a5" font-size="10" font-weight="bold">HIGH</text>
+
+  <rect x="616" y="222" width="124" height="56" rx="4" fill="#1e1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="678" y="240" text-anchor="middle" fill="#94a3b8" font-size="9">WORM storage;</text>
+  <text x="678" y="253" text-anchor="middle" fill="#94a3b8" font-size="9">tamper-evident logs;</text>
+  <text x="678" y="266" text-anchor="middle" fill="#94a3b8" font-size="9">session recording</text>
+
+  <!-- I — Information Disclosure -->
+  <rect x="20"  y="282" width="100" height="56" rx="4" fill="#1e2a3a" stroke="#38bdf8" stroke-width="1"/>
+  <text x="70"  y="302" text-anchor="middle" fill="#7dd3fc" font-size="12" font-weight="bold">I</text>
+  <text x="70"  y="318" text-anchor="middle" fill="#7dd3fc" font-size="9">Information</text>
+  <text x="70"  y="332" text-anchor="middle" fill="#7dd3fc" font-size="9">Disclosure</text>
+
+  <rect x="124" y="282" width="160" height="56" rx="4" fill="#1e1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="204" y="302" text-anchor="middle" fill="#e2e8f0" font-size="10">Exposing sensitive</text>
+  <text x="204" y="316" text-anchor="middle" fill="#e2e8f0" font-size="10">monitoring data or</text>
+  <text x="204" y="330" text-anchor="middle" fill="#e2e8f0" font-size="10">internal credentials</text>
+
+  <rect x="288" y="282" width="240" height="56" rx="4" fill="#1e1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="408" y="302" text-anchor="middle" fill="#7dd3fc" font-size="10">Not the primary attack vector here;</text>
+  <text x="408" y="316" text-anchor="middle" fill="#94a3b8" font-size="10">the scandal involved false data,</text>
+  <text x="408" y="330" text-anchor="middle" fill="#94a3b8" font-size="10">not leaked confidential data</text>
+
+  <rect x="532" y="282" width="80" height="56" rx="4" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+  <text x="572" y="313" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="bold">LOW</text>
+
+  <rect x="616" y="282" width="124" height="56" rx="4" fill="#1e1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="678" y="300" text-anchor="middle" fill="#94a3b8" font-size="9">Standard encryption</text>
+  <text x="678" y="313" text-anchor="middle" fill="#94a3b8" font-size="9">at rest and in transit</text>
+
+  <!-- E — Elevation of Privilege -->
+  <rect x="20"  y="342" width="100" height="56" rx="4" fill="#3b2000" stroke="#f97316" stroke-width="1.5"/>
+  <text x="70"  y="362" text-anchor="middle" fill="#fdba74" font-size="12" font-weight="bold">E</text>
+  <text x="70"  y="378" text-anchor="middle" fill="#fdba74" font-size="9">Elevation of</text>
+  <text x="70"  y="392" text-anchor="middle" fill="#fdba74" font-size="9">Privilege</text>
+
+  <rect x="124" y="342" width="160" height="56" rx="4" fill="#1e1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="204" y="362" text-anchor="middle" fill="#e2e8f0" font-size="10">Gaining unauthorised</text>
+  <text x="204" y="376" text-anchor="middle" fill="#e2e8f0" font-size="10">access to modify or</text>
+  <text x="204" y="390" text-anchor="middle" fill="#e2e8f0" font-size="10">delete records</text>
+
+  <rect x="288" y="342" width="240" height="56" rx="4" fill="#1e1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="408" y="360" text-anchor="middle" fill="#fdba74" font-size="10">DB admin credentials abused to</text>
+  <text x="408" y="374" text-anchor="middle" fill="#94a3b8" font-size="10">directly UPDATE historical records;</text>
+  <text x="408" y="388" text-anchor="middle" fill="#94a3b8" font-size="10">no segregation of duties enforced</text>
+
+  <rect x="532" y="342" width="80" height="56" rx="4" fill="#3b1a1a" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="572" y="373" text-anchor="middle" fill="#fca5a5" font-size="10" font-weight="bold">HIGH</text>
+
+  <rect x="616" y="342" width="124" height="56" rx="4" fill="#1e1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="678" y="360" text-anchor="middle" fill="#94a3b8" font-size="9">Zero-trust ABAC;</text>
+  <text x="678" y="373" text-anchor="middle" fill="#94a3b8" font-size="9">write-only data account;</text>
+  <text x="678" y="386" text-anchor="middle" fill="#94a3b8" font-size="9">read-only admin account</text>
+
+  <!-- Horizontal dividers -->
+  <line x1="20" y1="160" x2="740" y2="160" stroke="#1e293b" stroke-width="1"/>
+  <line x1="20" y1="220" x2="740" y2="220" stroke="#1e293b" stroke-width="1"/>
+  <line x1="20" y1="280" x2="740" y2="280" stroke="#1e293b" stroke-width="1"/>
+  <line x1="20" y1="340" x2="740" y2="340" stroke="#1e293b" stroke-width="1"/>
+
+  <!-- Summary bar -->
+  <rect x="20" y="408" width="720" height="50" rx="6" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="380" y="427" text-anchor="middle" fill="#fca5a5" font-size="11" font-weight="bold">Primary Attack Vector: Tampering (T) + Elevation of Privilege (E)</text>
+  <text x="380" y="448" text-anchor="middle" fill="#94a3b8" font-size="10">Root cause: absence of cryptographic integrity controls and lack of segregation of duties across the data pipeline</text>
+
+  <!-- Footer -->
+  <text x="380" y="530" text-anchor="middle" fill="#334155" font-size="9">Figure 3 — STRIDE Threat Model: environmental monitoring data pipeline (DoS row omitted — not a primary vector in this case)</text>
+</svg>

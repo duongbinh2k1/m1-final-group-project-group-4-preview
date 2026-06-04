@@ -1,0 +1,150 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 560" font-family="Arial, sans-serif">
+  <rect width="760" height="560" fill="#0f172a" rx="12"/>
+
+  <!-- Title -->
+  <text x="380" y="34" text-anchor="middle" fill="#f1f5f9" font-size="15" font-weight="bold">Proposed Secure Architecture — Technical Recommendations</text>
+  <text x="380" y="52" text-anchor="middle" fill="#94a3b8" font-size="11">Zero-Trust, Cryptographically Verified Environmental Monitoring Pipeline</text>
+
+  <!-- ===== LAYER 1: SENSOR + SIGNING ===== -->
+  <rect x="30" y="72" width="700" height="80" rx="8" fill="#0d2235" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="380" y="91" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="bold">LAYER 1 — Edge Devices (Tamper-Resistant)</text>
+
+  <!-- Sensor box -->
+  <rect x="50" y="100" width="100" height="36" rx="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1"/>
+  <text x="100" y="116" text-anchor="middle" fill="#93c5fd" font-size="9" font-weight="bold">Sensor / CEMS</text>
+  <text x="100" y="129" text-anchor="middle" fill="#64748b" font-size="8">raw reading</text>
+
+  <text x="162" y="120" text-anchor="middle" fill="#475569" font-size="14">→</text>
+
+  <!-- TPM box -->
+  <rect x="175" y="100" width="130" height="36" rx="6" fill="#1e3a5f" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="240" y="116" text-anchor="middle" fill="#86efac" font-size="9" font-weight="bold">TPM / HSM</text>
+  <text x="240" y="129" text-anchor="middle" fill="#64748b" font-size="8">HMAC-SHA256 sign each record</text>
+
+  <text x="317" y="120" text-anchor="middle" fill="#475569" font-size="14">→</text>
+
+  <!-- Secure boot -->
+  <rect x="330" y="100" width="110" height="36" rx="6" fill="#1e3a5f" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="385" y="116" text-anchor="middle" fill="#86efac" font-size="9" font-weight="bold">Secure Boot</text>
+  <text x="385" y="129" text-anchor="middle" fill="#64748b" font-size="8">prevent firmware tampering</text>
+
+  <text x="452" y="120" text-anchor="middle" fill="#475569" font-size="14">→</text>
+
+  <!-- mTLS -->
+  <rect x="465" y="100" width="110" height="36" rx="6" fill="#1e3a5f" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="520" y="116" text-anchor="middle" fill="#86efac" font-size="9" font-weight="bold">mTLS 1.3</text>
+  <text x="520" y="129" text-anchor="middle" fill="#64748b" font-size="8">mutual auth to server</text>
+
+  <text x="587" y="120" text-anchor="middle" fill="#475569" font-size="14">→</text>
+
+  <!-- Signed payload -->
+  <rect x="600" y="100" width="110" height="36" rx="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1"/>
+  <text x="655" y="116" text-anchor="middle" fill="#93c5fd" font-size="9" font-weight="bold">Signed Payload</text>
+  <text x="655" y="129" text-anchor="middle" fill="#64748b" font-size="8">{value, ts, sig, device_id}</text>
+
+  <!-- ===== ARROW DOWN ===== -->
+  <line x1="380" y1="152" x2="380" y2="175" stroke="#22c55e" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <text x="390" y="167" fill="#22c55e" font-size="8">TLS — signature verified at ingress</text>
+
+  <!-- ===== LAYER 2: BACKEND + IMMUTABLE LOG ===== -->
+  <rect x="30" y="175" width="700" height="95" rx="8" fill="#0d230d" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="380" y="194" text-anchor="middle" fill="#86efac" font-size="11" font-weight="bold">LAYER 2 — Backend Ingestion (Zero-Trust, Signature Verification)</text>
+
+  <!-- Verify sig -->
+  <rect x="50" y="203" width="125" height="52" rx="6" fill="#1a3a1a" stroke="#22c55e" stroke-width="1"/>
+  <text x="112" y="221" text-anchor="middle" fill="#86efac" font-size="9" font-weight="bold">Verify Signature</text>
+  <text x="112" y="234" text-anchor="middle" fill="#64748b" font-size="8">reject if invalid</text>
+  <text x="112" y="246" text-anchor="middle" fill="#64748b" font-size="8">log rejection event</text>
+
+  <text x="187" y="230" text-anchor="middle" fill="#475569" font-size="14">→</text>
+
+  <!-- Range check / anomaly -->
+  <rect x="200" y="203" width="130" height="52" rx="6" fill="#1a3a1a" stroke="#22c55e" stroke-width="1"/>
+  <text x="265" y="221" text-anchor="middle" fill="#86efac" font-size="9" font-weight="bold">Anomaly Detection</text>
+  <text x="265" y="234" text-anchor="middle" fill="#64748b" font-size="8">flatline, out-of-range,</text>
+  <text x="265" y="246" text-anchor="middle" fill="#64748b" font-size="8">cross-param correlation</text>
+
+  <text x="342" y="230" text-anchor="middle" fill="#475569" font-size="14">→</text>
+
+  <!-- Append-only DB -->
+  <rect x="355" y="203" width="130" height="52" rx="6" fill="#1a3a1a" stroke="#22c55e" stroke-width="1"/>
+  <text x="420" y="221" text-anchor="middle" fill="#86efac" font-size="9" font-weight="bold">Append-Only DB</text>
+  <text x="420" y="234" text-anchor="middle" fill="#64748b" font-size="8">INSERT only — no UPDATE</text>
+  <text x="420" y="246" text-anchor="middle" fill="#64748b" font-size="8">no DELETE on live data</text>
+
+  <text x="497" y="230" text-anchor="middle" fill="#475569" font-size="14">→</text>
+
+  <!-- Independent gov repo -->
+  <rect x="510" y="203" width="200" height="52" rx="6" fill="#2a1a00" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="610" y="221" text-anchor="middle" fill="#fcd34d" font-size="9" font-weight="bold">★ Independent Gov. Repository</text>
+  <text x="610" y="234" text-anchor="middle" fill="#64748b" font-size="8">Direct raw data stream to MoNRE</text>
+  <text x="610" y="246" text-anchor="middle" fill="#64748b" font-size="8">bypassing monitoring firm</text>
+
+  <!-- ===== ARROW DOWN ===== -->
+  <line x1="380" y1="270" x2="380" y2="293" stroke="#a855f7" stroke-width="2" marker-end="url(#arrowPurple)"/>
+  <text x="390" y="285" fill="#a855f7" font-size="8">hash of each DB row committed to chain</text>
+
+  <!-- ===== LAYER 3: BLOCKCHAIN AUDIT ===== -->
+  <rect x="30" y="293" width="700" height="70" rx="8" fill="#1e0f2e" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="380" y="312" text-anchor="middle" fill="#d8b4fe" font-size="11" font-weight="bold">LAYER 3 — Blockchain / Distributed Audit Chain</text>
+
+  <rect x="60"  y="322" width="140" height="30" rx="5" fill="#2d1a3a" stroke="#a855f7" stroke-width="1"/>
+  <text x="130" y="341" text-anchor="middle" fill="#d8b4fe" font-size="9">Block N: hash(row_1..N)</text>
+
+  <text x="212" y="340" fill="#a855f7" font-size="12">→</text>
+
+  <rect x="225" y="322" width="140" height="30" rx="5" fill="#2d1a3a" stroke="#a855f7" stroke-width="1"/>
+  <text x="295" y="341" text-anchor="middle" fill="#d8b4fe" font-size="9">Block N+1: includes prev hash</text>
+
+  <text x="377" y="340" fill="#a855f7" font-size="12">→</text>
+
+  <rect x="390" y="322" width="130" height="30" rx="5" fill="#2d1a3a" stroke="#a855f7" stroke-width="1"/>
+  <text x="455" y="341" text-anchor="middle" fill="#d8b4fe" font-size="9">Block N+2 → … immutable</text>
+
+  <rect x="540" y="318" width="170" height="38" rx="5" fill="#1e0f2e" stroke="#a855f7" stroke-width="1"/>
+  <text x="625" y="334" text-anchor="middle" fill="#94a3b8" font-size="9">Any retrospective modification</text>
+  <text x="625" y="347" text-anchor="middle" fill="#d8b4fe" font-size="9">invalidates all subsequent blocks</text>
+
+  <!-- ===== ARROW DOWN ===== -->
+  <line x1="380" y1="363" x2="380" y2="386" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrowAmber)"/>
+
+  <!-- ===== LAYER 4: TRANSPARENCY + COMPLIANCE ===== -->
+  <rect x="30" y="386" width="700" height="75" rx="8" fill="#1e1800" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="380" y="406" text-anchor="middle" fill="#fcd34d" font-size="11" font-weight="bold">LAYER 4 — Public Transparency + Regulatory Compliance</text>
+
+  <rect x="50"  y="415" width="155" height="36" rx="5" fill="#2a1e00" stroke="#f59e0b" stroke-width="1"/>
+  <text x="128" y="430" text-anchor="middle" fill="#fcd34d" font-size="9" font-weight="bold">Public API / Open Portal</text>
+  <text x="128" y="443" text-anchor="middle" fill="#64748b" font-size="8">Real-time raw data feed</text>
+
+  <rect x="220" y="415" width="155" height="36" rx="5" fill="#2a1e00" stroke="#f59e0b" stroke-width="1"/>
+  <text x="297" y="430" text-anchor="middle" fill="#fcd34d" font-size="9" font-weight="bold">Automated Cross-Check</text>
+  <text x="297" y="443" text-anchor="middle" fill="#64748b" font-size="8">Report vs. raw data diff alert</text>
+
+  <rect x="390" y="415" width="155" height="36" rx="5" fill="#2a1e00" stroke="#f59e0b" stroke-width="1"/>
+  <text x="467" y="430" text-anchor="middle" fill="#fcd34d" font-size="9" font-weight="bold">ISO 27001 / NIST CSF</text>
+  <text x="467" y="443" text-anchor="middle" fill="#64748b" font-size="8">Detect function enforced</text>
+
+  <rect x="560" y="415" width="155" height="36" rx="5" fill="#2a1e00" stroke="#f59e0b" stroke-width="1"/>
+  <text x="637" y="430" text-anchor="middle" fill="#fcd34d" font-size="9" font-weight="bold">3rd-Party Audit Trail</text>
+  <text x="637" y="443" text-anchor="middle" fill="#64748b" font-size="8">Independent verification</text>
+
+  <!-- Key differences box -->
+  <rect x="30" y="472" width="700" height="48" rx="6" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="380" y="491" text-anchor="middle" fill="#86efac" font-size="10" font-weight="bold">Key differences from the compromised system in the Việt An case</text>
+  <text x="380" y="508" text-anchor="middle" fill="#94a3b8" font-size="9">① Signing at source removes the ability to alter data after collection  ② Append-only DB eliminates retrospective modification  ③ Independent gov. repository removes the monitoring firm from the data custody chain</text>
+
+  <!-- Footer -->
+  <text x="380" y="550" text-anchor="middle" fill="#334155" font-size="9">Figure 4 — Proposed Secure Architecture: zero-trust, cryptographically verified environmental monitoring pipeline</text>
+
+  <defs>
+    <marker id="arrowGreen" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#22c55e"/>
+    </marker>
+    <marker id="arrowPurple" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#a855f7"/>
+    </marker>
+    <marker id="arrowAmber" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#f59e0b"/>
+    </marker>
+  </defs>
+</svg>

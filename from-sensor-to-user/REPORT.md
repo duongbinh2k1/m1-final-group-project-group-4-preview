@@ -4,7 +4,7 @@
 
 **Smart Mushroom Greenhouse AIoT Platform**
 
-An end-to-end IoT system that collects environmental sensor data from a mushroom cultivation greenhouse, applies on-device and cloud AI inference to classify plant health, and delivers real-time alerts and actuator control to farm operators through a web dashboard and mobile interface.
+An end-to-end IoT system that collects environmental sensor data from a mushroom cultivation greenhouse, applies on-device and cloud AI inference to classify plant health, and delivers real-time alerts and actuator control to farm operators through a web dashboard.
 
 ---
 
@@ -28,7 +28,7 @@ AI classification → Dashboard visualisation → Actuator control
 | Stakeholder | Interest |
 |---|---|
 | **Farm operator / owner** | Real-time visibility, automated responses, reduced crop loss |
-| **Farm workers** | Mobile alerts, manual override capability |
+| **Farm workers** | Real-time dashboard alerts, manual override capability |
 | **Buyers / distributors** | Consistent product quality enabled by stable growing conditions |
 | **System administrator** | Backend health, MQTT uptime, database reliability |
 | **Development team** | Maintainability, extensibility to more sensors and racks |
@@ -44,7 +44,7 @@ The system is considered successful when it:
 - Measures air temperature, air humidity, and soil moisture every **5 seconds** with less than ±1 °C / ±2 % RH error.
 - Classifies plant health as `healthy`, `warning`, or `critical` with **≥ 85 % accuracy** compared to domain-expert labels.
 - Sends actuator decisions (fan ON/OFF, water pump ON/OFF) within **2 seconds** of a sensor reading that crosses a threshold.
-- Delivers a push notification or dashboard update to the operator within **10 seconds** of a critical event.
+- Delivers a dashboard alert to the operator within **10 seconds** of a critical event via Socket.IO real-time broadcast.
 - Maintains system uptime of **≥ 99 %** during growing cycles (typically 30–60 days).
 
 ### Environment
@@ -60,7 +60,7 @@ The system is considered successful when it:
 |---|---|---|
 | **Cooling fan (×2)** | Reduce air temperature and improve airflow | `air_temperature > 30 °C` OR `air_humidity < 50 %` (in AUTO mode); AI classification `critical` |
 | **Water mist pump** | Increase soil and air moisture | `soil_moisture < 25 %` (in AUTO mode); AI classification `warning/critical` |
-| **Visual/audio alert** | Notify operator on dashboard and mobile | Any `critical` AI classification |
+| **Dashboard alert** | Notify operator via Socket.IO real-time update (stage badge turns red, warning banner) | Any `critical` AI classification |
 
 Control modes supported: **OFF**, **AUTO** (AI-driven), **MANUAL** (threshold-based). A hardware safety floor overrides all modes if conditions become extreme (`soil < 10 %` or `temp > 40 °C`).
 
@@ -176,7 +176,7 @@ Operators can also issue manual commands (CMD_ON / CMD_OFF per actuator) via the
 The operator interacts with the system through:
 
 1. **Web dashboard** (React + Vite): real-time metric cards, trend charts (Recharts), AI stage badge, relay toggle switches, control mode selector (OFF / AUTO / MANUAL), and a 3D digital twin rendered with Three.js that visually reflects current sensor states.
-2. **Mobile app** (React Native / Expo): same data via the same backend REST + Socket.IO API; includes push notification support for `critical` events.
+2. **Mobile app** (React Native / Expo): same data feed via the same backend REST + Socket.IO API; real-time sensor view and control. *(Push notification via Telegram bot is implemented in the codebase but not configured in the current production deployment.)*
 3. **MQTT command channel** (`mushroom-farm/rack-1/command`): operators can send JSON commands directly for integration with third-party automation tools.
 
 ---
@@ -232,10 +232,10 @@ The operator interacts with the system through:
 ┌──────────────────┐  ┌──────────────────────┐
 │  WEB FRONTEND    │  │  MOBILE APP          │
 │  React + Vite    │  │  React Native/Expo   │
-│  Three.js (twin) │  │  Push notifications  │
-│  Recharts        │  └──────────────────────┘
-│  Zustand store   │
-└──────────────────┘
+│  Three.js (twin) │  │  (Telegram notif.    │
+│  Recharts        │  │   code present;      │
+│  Zustand store   │  │   not in prod)       │
+└──────────────────┘  └──────────────────────┘
 ```
 
 ### Hardware Stack

@@ -10,6 +10,9 @@ Security and Ethical Analysis of the Environmental Monitoring Data Manipulation 
 
 ## 1. Introduction
 
+![Industrial air pollution from factory stacks](images/industrial_air_pollution.jpg)
+*Industrial emissions — the type of pollution that environmental monitoring systems are designed to measure and regulate. (Image: Wikimedia Commons, CC BY-SA)*
+
 Environmental monitoring systems are a cornerstone of modern governance. They provide the data that regulators, policymakers, and the public rely on to assess industrial pollution, enforce environmental law, and make decisions affecting public health. The trustworthiness of these systems is therefore not merely a technical question — it is a matter of democratic accountability and societal safety.
 
 In Vietnam, a scandal involving Việt An Environmental Technology JSC (Công ty Cổ phần Công nghệ Môi trường Việt An) and the Northern Environmental Monitoring Center (Trung tâm Quan trắc Môi trường Miền Bắc) exposed systematic manipulation of environmental monitoring data over an extended period. Involved parties allegedly modified recorded sensor values, forged calibration certificates, bypassed actual measurement procedures, and submitted falsified reports to regulatory agencies. Industrial polluters — large manufacturing enterprises with financial interests in passing compliance checks — were implicated in collusion with the monitoring bodies [1].
@@ -21,6 +24,9 @@ This report analyses the case from two complementary perspectives: **data securi
 ---
 
 ## 2. Case Reconstruction
+
+![Air quality monitoring station](images/air_quality_monitoring_station.jpg)
+*A typical automated air quality monitoring station — the type of infrastructure whose data integrity was compromised in the Việt An case. (Image: Wikimedia Commons, CC BY-SA, Perugia 2012)*
 
 ### Timeline
 
@@ -74,6 +80,12 @@ The absence of cryptographic integrity protection at each stage meant that value
 
 ## 3. Environmental Data Ecosystem
 
+![Environmental monitoring unit with sensors and CAN bus](images/environmental_monitoring_unit.png)
+*A typical environmental monitoring unit — sensors, data logger, and communication interface. (Image: Wikimedia Commons, CC BY-SA)*
+
+![Roadside air quality monitoring station cabinet](images/environmental_monitoring_station_uk.jpg)
+*Roadside automated monitoring station cabinet — the physical form of a CEMS field node. (Image: Wikimedia Commons, CC BY-SA, geograph.org.uk)*
+
 A modern automated environmental monitoring system typically comprises the following components:
 
 **Sensors and Measurement Devices**: Automated analysers for parameters such as particulate matter (PM2.5, PM10), NOₓ, SOₓ, COD (in water), heavy metals, and flow rates. In Vietnam's Continuous Emissions Monitoring Systems (CEMS), sensors are installed at emission stacks and effluent discharge points.
@@ -100,36 +112,25 @@ A modern automated environmental monitoring system typically comprises the follo
 
 ### 4.1 Data Flow and Trust Boundaries
 
-**Data Flow Diagram (textual representation):**
+![Data Flow Diagram showing manipulation points](images/dfd_manipulation_points.svg)
+*Figure 1 — Data Flow Diagram: the Việt An environmental monitoring pipeline with identified manipulation points (red) and trust boundaries (dashed).*
 
-```
-[Physical emission source]
-     │ physical phenomena (particles, gases)
-     ▼
-[Sensor / analyser] ──────── TRUST BOUNDARY 1 ─────────────────────
-     │ raw ADC / digital reading (unprotected)
-     ▼
-[Data logger / embedded controller]
-     │ stored locally (no encryption at rest, proprietary format)
-     ▼
-[GPRS/4G transmission] ──── TRUST BOUNDARY 2 ─────────────────────
-     │ typically unencrypted or weakly encrypted
-     ▼
-[Monitoring organisation database]
-     │ no immutable audit log; modification possible by DB admins
-     ▼
-[Report generation] ──────── TRUST BOUNDARY 3 ─────────────────────
-     │ manual or semi-automated; no cryptographic binding to raw data
-     ▼
-[Regulatory portal submission]
-     │ accepted on trust; no independent verification of values
-     ▼
-[MoNRE / provincial agency records]
-```
+The diagram above illustrates the data flow from field sensor to the regulatory portal, with three primary manipulation points highlighted in red and the key trust boundary (the monitoring organisation's internal systems) marked with a dashed border.
 
 Each trust boundary represents a point where data transitions between system components and should, but did not, have integrity verification. The critical observation is that **no cryptographic chain of custody** existed between the sensor reading and the regulatory report.
 
+| Stage | Manipulation Point | STRIDE Category |
+|---|---|---|
+| Field laptop / data logger | Values edited before export | Tampering (T) |
+| Internal database | Admin-level UPDATE on historical rows | Tampering (T) + Elevation of Privilege (E) |
+| Report generation | Values overwritten in template | Tampering (T) |
+| Calibration certificates | Forged PDF documents | Spoofing (S) |
+| Measurement sessions | Skipped entirely, data fabricated | Repudiation (R) |
+
 ### 4.2 Threat Modeling — STRIDE Framework
+
+![STRIDE Threat Model table](images/stride_threat_model.svg)
+*Figure 3 — STRIDE Threat Model applied to the environmental monitoring data pipeline.*
 
 We apply the STRIDE threat model [3] to the environmental monitoring data pipeline:
 
@@ -155,6 +156,9 @@ We apply the STRIDE threat model [3] to the environmental monitoring data pipeli
 5. **Report-layer manipulation**: Final reports were generated using office software (spreadsheets, Word documents) with no audit trail linking the report values to the database records.
 
 ### 4.3 CIA Triad Analysis
+
+![CIA Triad Analysis diagram](images/cia_triad_analysis.svg)
+*Figure 2 — CIA Triad Analysis: impact assessment of the Việt An case. Integrity (centre) is the critically violated property.*
 
 | Property | Assessment |
 |---|---|
@@ -186,6 +190,9 @@ This asymmetry — silent deception versus visible failure — makes **integrity
 - **Access control** was insufficient; too many parties could modify authoritative records.
 
 ### 4.5 Technical Recommendations
+
+![Proposed Secure Architecture diagram](images/secure_architecture_recommendations.svg)
+*Figure 4 — Proposed Secure Architecture: zero-trust, cryptographically verified pipeline that addresses the vulnerabilities exploited in the Việt An case.*
 
 The following technical measures would substantially reduce the risk of similar manipulation:
 

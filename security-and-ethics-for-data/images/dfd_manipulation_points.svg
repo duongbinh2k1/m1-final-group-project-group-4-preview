@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 620" font-family="Arial, sans-serif">
+  <!-- Background -->
+  <rect width="720" height="620" fill="#0f172a" rx="12"/>
+
+  <!-- Title -->
+  <text x="360" y="36" text-anchor="middle" fill="#f1f5f9" font-size="15" font-weight="bold">Data Flow Diagram — Environmental Monitoring System</text>
+  <text x="360" y="54" text-anchor="middle" fill="#94a3b8" font-size="11">Showing manipulation points identified in the Việt An case</text>
+
+  <!-- ===== NODES ===== -->
+  <!-- Node 1: Sensor -->
+  <rect x="270" y="78" width="180" height="50" rx="8" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="360" y="98" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="bold">Measurement Device / Sensor</text>
+  <text x="360" y="114" text-anchor="middle" fill="#64748b" font-size="10">Raw ADC readings (unaltered)</text>
+
+  <!-- Arrow 1 -->
+  <line x1="360" y1="128" x2="360" y2="158" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="370" y="147" fill="#64748b" font-size="9">raw values</text>
+
+  <!-- Node 2: Data Logger — MANIPULATION A -->
+  <rect x="240" y="158" width="240" height="56" rx="8" fill="#3b1a1a" stroke="#ef4444" stroke-width="2"/>
+  <text x="360" y="178" text-anchor="middle" fill="#fca5a5" font-size="11" font-weight="bold">Field Laptop / Data Logger</text>
+  <text x="360" y="194" text-anchor="middle" fill="#94a3b8" font-size="10">Stores readings locally</text>
+  <text x="360" y="208" text-anchor="middle" fill="#fca5a5" font-size="9">⚠ Manipulation Point A</text>
+
+  <!-- Threat bubble A -->
+  <rect x="510" y="162" width="190" height="44" rx="6" fill="#1a0f0f" stroke="#ef4444" stroke-width="1"/>
+  <text x="605" y="179" text-anchor="middle" fill="#ef4444" font-size="9" font-weight="bold">THREAT A</text>
+  <text x="605" y="193" text-anchor="middle" fill="#fca5a5" font-size="9">Values edited before export</text>
+  <text x="605" y="205" text-anchor="middle" fill="#94a3b8" font-size="9">Insider — STRIDE: Tampering</text>
+  <line x1="510" y1="182" x2="480" y2="182" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3"/>
+
+  <!-- Arrow 2 -->
+  <line x1="360" y1="214" x2="360" y2="244" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Node 3: Internal DB — MANIPULATION B -->
+  <rect x="240" y="244" width="240" height="56" rx="8" fill="#3b1a1a" stroke="#ef4444" stroke-width="2"/>
+  <text x="360" y="264" text-anchor="middle" fill="#fca5a5" font-size="11" font-weight="bold">Internal Database</text>
+  <text x="360" y="280" text-anchor="middle" fill="#94a3b8" font-size="10">No immutable log, no audit trail</text>
+  <text x="360" y="294" text-anchor="middle" fill="#fca5a5" font-size="9">⚠ Manipulation Point B</text>
+
+  <!-- Threat bubble B -->
+  <rect x="510" y="248" width="190" height="44" rx="6" fill="#1a0f0f" stroke="#ef4444" stroke-width="1"/>
+  <text x="605" y="265" text-anchor="middle" fill="#ef4444" font-size="9" font-weight="bold">THREAT B</text>
+  <text x="605" y="279" text-anchor="middle" fill="#fca5a5" font-size="9">DB admin modifies records</text>
+  <text x="605" y="291" text-anchor="middle" fill="#94a3b8" font-size="9">Privilege Abuse — STRIDE: E+T</text>
+  <line x1="510" y1="268" x2="480" y2="268" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3"/>
+
+  <!-- Arrow 3 -->
+  <line x1="360" y1="300" x2="360" y2="330" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Node 4: Report Generation — MANIPULATION C -->
+  <rect x="240" y="330" width="240" height="56" rx="8" fill="#3b1a1a" stroke="#f97316" stroke-width="2"/>
+  <text x="360" y="350" text-anchor="middle" fill="#fdba74" font-size="11" font-weight="bold">Report Generation</text>
+  <text x="360" y="366" text-anchor="middle" fill="#94a3b8" font-size="10">Office software / spreadsheet</text>
+  <text x="360" y="380" text-anchor="middle" fill="#fdba74" font-size="9">⚠ Manipulation Point C</text>
+
+  <!-- Threat bubble C -->
+  <rect x="510" y="334" width="190" height="44" rx="6" fill="#1a0a00" stroke="#f97316" stroke-width="1"/>
+  <text x="605" y="351" text-anchor="middle" fill="#f97316" font-size="9" font-weight="bold">THREAT C</text>
+  <text x="605" y="365" text-anchor="middle" fill="#fdba74" font-size="9">Values overwritten in template</text>
+  <text x="605" y="377" text-anchor="middle" fill="#94a3b8" font-size="9">No crypto binding to raw data</text>
+  <line x1="510" y1="354" x2="480" y2="354" stroke="#f97316" stroke-width="1" stroke-dasharray="4,3"/>
+
+  <!-- Arrow 4 -->
+  <line x1="360" y1="386" x2="360" y2="416" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Node 5: Regulatory Portal -->
+  <rect x="240" y="416" width="240" height="50" rx="8" fill="#1a2a1a" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="360" y="436" text-anchor="middle" fill="#86efac" font-size="11" font-weight="bold">Regulatory Portal (MoNRE)</text>
+  <text x="360" y="452" text-anchor="middle" fill="#64748b" font-size="10">Accepts report on trust — no verification</text>
+  <text x="360" y="464" text-anchor="middle" fill="#fca5a5" font-size="9">← receives falsified compliance data</text>
+
+  <!-- Calibration Forgery side node -->
+  <rect x="20" y="320" width="185" height="70" rx="8" fill="#2d1a3a" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="112" y="340" text-anchor="middle" fill="#d8b4fe" font-size="10" font-weight="bold">Forged Calibration Certificates</text>
+  <text x="112" y="356" text-anchor="middle" fill="#94a3b8" font-size="9">PDF documents with no</text>
+  <text x="112" y="370" text-anchor="middle" fill="#94a3b8" font-size="9">cryptographic link to equipment</text>
+  <text x="112" y="384" text-anchor="middle" fill="#d8b4fe" font-size="9">STRIDE: Spoofing</text>
+  <line x1="205" y1="355" x2="240" y2="355" stroke="#a855f7" stroke-width="1" stroke-dasharray="4,3"/>
+
+  <!-- Trust boundary boxes -->
+  <rect x="228" y="150" width="264" height="252" rx="4" fill="none" stroke="#ef4444" stroke-width="1" stroke-dasharray="6,4" opacity="0.5"/>
+  <text x="234" y="165" fill="#ef4444" font-size="9" opacity="0.8">Trust Boundary — Monitoring Org (no independent oversight)</text>
+
+  <!-- Legend -->
+  <rect x="20" y="430" width="185" height="95" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="112" y="448" text-anchor="middle" fill="#f1f5f9" font-size="10" font-weight="bold">Legend</text>
+  <rect x="30" y="456" width="12" height="12" rx="2" fill="#3b1a1a" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="50" y="466" fill="#fca5a5" font-size="9">Manipulation point (critical)</text>
+  <rect x="30" y="476" width="12" height="12" rx="2" fill="#1a2a1a" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="50" y="486" fill="#86efac" font-size="9">Legitimate system component</text>
+  <line x1="30" y1="498" x2="42" y2="498" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="50" y="501" fill="#94a3b8" font-size="9">Out-of-band attack path</text>
+  <rect x="30" y="510" width="185" height="0" fill="none"/>
+  <text x="50" y="516" fill="#94a3b8" font-size="9">T = Tampering, E = Elevation of Priv.</text>
+
+  <!-- Footer -->
+  <text x="360" y="596" text-anchor="middle" fill="#334155" font-size="9">Figure 1 — Data Flow Diagram: Việt An Environmental Monitoring Scandal</text>
+
+  <!-- Arrow marker -->
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#475569"/>
+    </marker>
+  </defs>
+</svg>

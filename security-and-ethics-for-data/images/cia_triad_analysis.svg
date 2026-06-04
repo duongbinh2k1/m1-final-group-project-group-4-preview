@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 480" font-family="Arial, sans-serif">
+  <rect width="720" height="480" fill="#0f172a" rx="12"/>
+
+  <!-- Title -->
+  <text x="360" y="34" text-anchor="middle" fill="#f1f5f9" font-size="15" font-weight="bold">CIA Triad Analysis</text>
+  <text x="360" y="52" text-anchor="middle" fill="#94a3b8" font-size="11">Environmental Monitoring Data — Việt An Case</text>
+
+  <!-- ===== THREE CIRCLES ===== -->
+  <!-- Confidentiality — blue, low severity -->
+  <circle cx="200" cy="240" r="120" fill="#1e3a5f" fill-opacity="0.85" stroke="#3b82f6" stroke-width="2.5"/>
+  <!-- Availability — amber, partial -->
+  <circle cx="520" cy="240" r="120" fill="#3b2800" fill-opacity="0.85" stroke="#f59e0b" stroke-width="2.5"/>
+  <!-- Integrity — red, critical — rendered last so it overlaps visually in the centre -->
+  <ellipse cx="360" cy="240" rx="130" ry="120" fill="#3b0a0a" fill-opacity="0.90" stroke="#ef4444" stroke-width="3"/>
+
+  <!-- Labels inside circles -->
+  <!-- Confidentiality -->
+  <text x="158" y="222" text-anchor="middle" fill="#93c5fd" font-size="13" font-weight="bold">Confidentiality</text>
+  <text x="158" y="242" text-anchor="middle" fill="#64748b" font-size="10">Low relevance</text>
+  <text x="158" y="258" text-anchor="middle" fill="#64748b" font-size="10">Data was intended</text>
+  <text x="158" y="272" text-anchor="middle" fill="#64748b" font-size="10">to be public</text>
+  <!-- Status badge -->
+  <rect x="112" y="282" width="92" height="20" rx="10" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1"/>
+  <text x="158" y="295" text-anchor="middle" fill="#93c5fd" font-size="10" font-weight="bold">NOT VIOLATED</text>
+
+  <!-- Integrity — centre -->
+  <text x="360" y="210" text-anchor="middle" fill="#fca5a5" font-size="14" font-weight="bold">Integrity</text>
+  <text x="360" y="230" text-anchor="middle" fill="#fca5a5" font-size="11" font-weight="bold">★ MOST CRITICAL ★</text>
+  <text x="360" y="250" text-anchor="middle" fill="#94a3b8" font-size="10">Sensor values falsified</text>
+  <text x="360" y="265" text-anchor="middle" fill="#94a3b8" font-size="10">DB records modified</text>
+  <text x="360" y="280" text-anchor="middle" fill="#94a3b8" font-size="10">Certs forged</text>
+  <!-- Status badge -->
+  <rect x="302" y="290" width="116" height="20" rx="10" fill="#7f1d1d" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="360" y="303" text-anchor="middle" fill="#fca5a5" font-size="10" font-weight="bold">SEVERELY VIOLATED</text>
+
+  <!-- Availability -->
+  <text x="562" y="222" text-anchor="middle" fill="#fcd34d" font-size="13" font-weight="bold">Availability</text>
+  <text x="562" y="242" text-anchor="middle" fill="#64748b" font-size="10">Partially affected</text>
+  <text x="562" y="258" text-anchor="middle" fill="#64748b" font-size="10">System ran but</text>
+  <text x="562" y="272" text-anchor="middle" fill="#64748b" font-size="10">true data was not</text>
+  <text x="562" y="286" text-anchor="middle" fill="#64748b" font-size="10">available to regulators</text>
+  <!-- Status badge -->
+  <rect x="512" y="296" width="100" height="20" rx="10" fill="#451a03" stroke="#f59e0b" stroke-width="1"/>
+  <text x="562" y="309" text-anchor="middle" fill="#fcd34d" font-size="10" font-weight="bold">PARTIALLY HIT</text>
+
+  <!-- Why Integrity matters most — bottom callout -->
+  <rect x="60" y="385" width="600" height="68" rx="8" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="360" y="404" text-anchor="middle" fill="#fca5a5" font-size="11" font-weight="bold">Why Integrity is paramount in environmental monitoring</text>
+  <text x="360" y="421" text-anchor="middle" fill="#94a3b8" font-size="10">A DoS attack is immediately visible → triggers manual inspection. Tampered data looks normal and is trusted</text>
+  <text x="360" y="436" text-anchor="middle" fill="#94a3b8" font-size="10">→ regulatory decisions, permits, and health advisories are all built on falsified values — invisibly.</text>
+  <text x="360" y="452" text-anchor="middle" fill="#64748b" font-size="9">Silent deception is exponentially more dangerous than a visible outage.</text>
+
+  <!-- Footer -->
+  <text x="360" y="473" text-anchor="middle" fill="#334155" font-size="9">Figure 2 — CIA Triad Analysis: impact assessment of the Việt An data manipulation case</text>
+</svg>
