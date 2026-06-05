@@ -523,10 +523,10 @@ The greenhouse was simulated using a clear acrylic box (6 mica panels joined wit
 
 | Student ID | Full Name | GitHub Username | Role | Main Contributions |
 |---|---|---|---|---|
-| 2540007 | Duong Tan Binh | *(to be filled)* | *(to be filled)* | *(to be filled)* |
-| 2540002 | Nguyen Nhat Anh | *(to be filled)* | *(to be filled)* | *(to be filled)* |
-| 2540047 | Dao Hoang Dung | *(to be filled)* | *(to be filled)* | *(to be filled)* |
-| ES.2540023 | Nicolas Foo Cheung | *(to be filled)* | *(to be filled)* | *(to be filled)* |
+| 2540002 | Nguyễn Nhật Anh  | anhnn-usth  | Team Leader | Team Monitor, Firmware, report |
+| 2540007 | Dương Tấn Bình | duongbinh2k1 | Tech Leader | Fullstack, Security, report |
+| 2540047 | Đào Hoàng Dũng |  akashi0310 | dev | AI, firmware, report |
+| ES.2540023 | Nicolas Foo Cheung | kkkipu | dev | Firmware, hardware setup, report |
 
 ---
 
