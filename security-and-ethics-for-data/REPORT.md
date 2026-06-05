@@ -394,7 +394,10 @@ The Smart Mushroom Greenhouse AIoT Platform developed in the companion course sh
 
 | Student ID | Full Name | GitHub Username | Role | Main Contributions |
 |---|---|---|---|---|
-| *(to be filled)* | *(to be filled)* | *(to be filled)* | *(to be filled)* | *(to be filled)* |
+| 2540002 | Nguyễn Nhật Anh | anhnn-usth | Team Leader | Overall report planning and coordination, Section 4 (STRIDE Threat Modeling), final report review and editing. |
+| 2540007 | Dương Tấn Bình | duongbinh2k1 | Tech Leader | Section 4 (CIA Triad & Data Flow Diagram analysis), Section 7 (System Architecture mapping to AIoT platform). |
+| 2540047 | Đào Hoàng Dũng | akashi0310 | Developer | Section 5 (AI and Data Ethics Reflections), Section 7 (Secure-by-design mitigation strategies for AIoT). |
+| ES.2540023 | Nicolas Foo Cheung | kkkipu | Developer | Section 2 & 3 (Case Reconstruction, Timelines, Data Ecosystem mapping), Section 6 (Critical Reflection on critical infrastructure). |
 
 ---
 
