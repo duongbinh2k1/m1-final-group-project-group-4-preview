@@ -451,9 +451,7 @@ The greenhouse was simulated using a clear acrylic box (6 mica panels joined wit
 
 ### Demo Video
 
-<video src="images/demo.mp4" controls width="100%">
-  <a href="images/demo.mp4">▶ Download / Watch Demo Video</a>
-</video>
+[▶ Watch Demo Video (Google Drive)](https://drive.google.com/drive/folders/1_42zt6ASI6IfoidNQdpF8oxOjGNOkwT4)
 
 ---
 
