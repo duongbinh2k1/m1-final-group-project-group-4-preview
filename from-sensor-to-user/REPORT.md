@@ -12,13 +12,17 @@ An end-to-end IoT system that collects environmental sensor data from a mushroom
 
 Mushroom cultivation is highly sensitive to environmental conditions. Temperature, air humidity, and soil moisture must stay within tight windows; deviations of even a few degrees or percentage points can cause mould outbreaks, poor fruiting, or complete crop failure within hours. Small-scale Vietnamese mushroom farms typically rely on manual checks by workers — an approach that is neither continuous nor reliable during nights and weekends.
 
-This project addresses the problem: **how can a low-cost, connected sensor system continuously monitor a mushroom greenhouse, detect dangerous conditions early, and trigger corrective actions automatically — without requiring constant human attention?**
+A further challenge specific to rural agricultural deployments is **highly unstable, intermittent Wi-Fi connectivity**. A system that stops protecting crops the moment the internet drops is not viable. The design must therefore guarantee continuous automated monitoring and actuator control **even during total network outages**, with full data recovery once connectivity is restored.
+
+This project addresses the problem: **how can a low-cost, connected sensor system continuously monitor a mushroom greenhouse, detect dangerous conditions early, and trigger corrective actions automatically — without requiring constant human attention and without depending on uninterrupted cloud connectivity?**
 
 The system covers the complete data lifecycle:
 
 ```
 Sensor reading → MQTT transmission → Cloud backend →
 AI classification → Dashboard visualisation → Actuator control
+         ↑
+   (local cache buffers data during Wi-Fi outages; syncs on reconnect)
 ```
 
 ---
@@ -46,6 +50,7 @@ The system is considered successful when it:
 - Sends actuator decisions (fan ON/OFF, water pump ON/OFF) within **2 seconds** of a sensor reading that crosses a threshold.
 - Delivers a dashboard alert to the operator within **10 seconds** of a critical event via Socket.IO real-time broadcast.
 - Maintains system uptime of **≥ 99 %** during growing cycles (typically 30–60 days).
+- **Continues protecting crops during network outages**: edge AI classifiers and the hardware safety floor operate without any cloud connection, and the local cache recovers all buffered readings automatically upon reconnect.
 
 ### Environment
 
@@ -71,11 +76,15 @@ Control modes supported: **OFF**, **AUTO** (AI-driven), **MANUAL** (threshold-ba
 | **DHT11** | Air temperature (0–50 °C, ±2 °C), Air humidity (20–80 % RH, ±5 %) | Mounted centrally in the growing rack |
 | **Capacitive soil moisture sensor** | Soil moisture (0–100 % relative, ±3 %) | Inserted into the substrate bag |
 
-Data is published to three MQTT topics per rack:
+Data is published and received over **five dedicated MQTT topics** per rack:
 
-- `mushroom-farm/rack-1/environment` — temperature, humidity, soil moisture
-- `mushroom-farm/rack-1/ai` — on-device health status classification
-- `mushroom-farm/rack-1/devices` — current relay states (fan, pump)
+| Topic | Direction | Content |
+|---|---|---|
+| `mushroom-farm/rack-1/environment` | ESP8266 → broker | Temperature, humidity, soil moisture readings |
+| `mushroom-farm/rack-1/ai` | ESP8266 → broker | On-device health status classification |
+| `mushroom-farm/rack-1/devices` | ESP8266 → broker | Current relay states (fan, pump) |
+| `mushroom-farm/rack-1/config` | broker → ESP8266 | Operating mode + threshold updates from backend |
+| `mushroom-farm/rack-1/command` | broker → ESP8266 | Manual actuator override commands from dashboard |
 
 ---
 
@@ -94,11 +103,20 @@ Data is published to three MQTT topics per rack:
 
 ### Risks
 
+**Operational risks** (product-level; each directly mitigated in the implementation):
+
+| Risk | Failure Mode | Mitigation Implemented |
+|---|---|---|
+| **Rural Wi-Fi disconnection** | ESP8266 cannot publish MQTT data; backend loses live tracking; crop risk increases | Local FIFO cache stores readings and actuator decisions; auto-syncs to broker on reconnect |
+| **Backend configuration failure** | Device remains in stale operating mode or uses outdated thresholds | Watchdog timer: device auto-reverts to AUTO mode if no config update received within timeout |
+| **Incorrect manual commands / misconfiguration** | Remote user accidentally disables actuators during a critical event | Hardware safety layer (highest priority): overrides any command if critical thresholds are exceeded |
+| **Cloud service unavailability** | MQTT broker unreachable; environmental control required | Edge AI classifiers run fully offline on ESP8266; protection continues without cloud |
+
+**Hardware / system risks:**
+
 | Risk | Likelihood | Impact |
 |---|---|---|
 | Sensor reading drift over time | Medium | High — stale calibration leads to incorrect AI decisions |
-| MQTT broker outage (cloud dependency) | Low | High — all real-time data flow stops |
-| Wi-Fi disconnection | High | Medium — data gap, no remote control |
 | ESP8266 firmware crash or memory leak | Low | High — silent data loss |
 | Relay hardware failure | Low | High — actuators do not respond |
 | Database overflow (Supabase free tier limits) | Medium | Medium — historical data truncated |
@@ -125,6 +143,8 @@ Data is published to three MQTT topics per rack:
 ---
 
 ## 6. DIKW Data Flow
+
+![DIKW Pipeline](images/dikw-pipeline.png)
 
 ### Data
 
@@ -159,6 +179,16 @@ The AI model (Decision Tree trained on the UCI Plant Health dataset) encodes dom
 
 ### Decision
 
+The ESP8266 applies a **hierarchical decision pipeline** — each layer has higher priority than the one below it:
+
+```
+① Safety Layer  (highest)  — force pump/fan ON if critical thresholds exceeded,
+                              regardless of any other setting
+② Mode Selection            — AUTO / MANUAL / OFF set via MQTT config topic
+③ Command Override          — explicit CMD_ON / CMD_OFF from dashboard
+④ AI / Threshold Logic      — classifier output (AUTO) or manual thresholds (MANUAL)
+```
+
 Based on the health classification and the active control mode, the firmware makes a real-time actuator decision:
 
 | Condition | Decision |
@@ -176,8 +206,7 @@ Operators can also issue manual commands (CMD_ON / CMD_OFF per actuator) via the
 The operator interacts with the system through:
 
 1. **Web dashboard** (React + Vite): real-time metric cards, trend charts (Recharts), AI stage badge, relay toggle switches, control mode selector (OFF / AUTO / MANUAL), and a 3D digital twin rendered with Three.js that visually reflects current sensor states.
-2. **Mobile app** (React Native / Expo): same data feed via the same backend REST + Socket.IO API; real-time sensor view and control. *(Push notification via Telegram bot is implemented in the codebase but not configured in the current production deployment.)*
-3. **MQTT command channel** (`mushroom-farm/rack-1/command`): operators can send JSON commands directly for integration with third-party automation tools.
+2. **MQTT command channel** (`mushroom-farm/rack-1/command`): operators can send JSON commands directly for integration with third-party automation tools.
 
 ---
 
@@ -227,15 +256,14 @@ The operator interacts with the system through:
 │                 ai_readings, users                               │
 └─────────────────────────────────────────────────────────────────┘
                     │ REST + Socket.IO
-          ┌─────────┴──────────┐
-          ▼                    ▼
-┌──────────────────┐  ┌──────────────────────┐
-│  WEB FRONTEND    │  │  MOBILE APP          │
-│  React + Vite    │  │  React Native/Expo   │
-│  Three.js (twin) │  │  (Telegram notif.    │
-│  Recharts        │  │   code present;      │
-│  Zustand store   │  │   not in prod)       │
-└──────────────────┘  └──────────────────────┘
+                    ▼
+          ┌──────────────────┐
+          │  WEB FRONTEND    │
+          │  React + Vite    │
+          │  Three.js (twin) │
+          │  Recharts        │
+          │  Zustand store   │
+          └──────────────────┘
 ```
 
 ### Hardware Stack
@@ -259,7 +287,6 @@ The operator interacts with the system through:
 | Backend | Python 3.11, FastAPI, paho-mqtt, python-socketio |
 | Database | Supabase (PostgreSQL 15) |
 | Frontend | React 18, Vite, Zustand, Recharts, Three.js |
-| Mobile | React Native, Expo |
 | Containerisation | Docker + docker-compose |
 
 ### Communication Protocols
@@ -273,9 +300,29 @@ The operator interacts with the system through:
 | Frontend → Backend | HTTP REST | Seeding history on load; control commands |
 | Backend → Database | HTTPS (Supabase JS SDK) | Async writes |
 
+### System Architecture Diagram
+
+![System Architecture Diagram](images/system-architecture.png)
+
+### Hardware Wiring Diagram
+
+![Hardware Wiring Diagram](images/hardware-wiring.png)
+
 ---
 
 ## 8. Implementation
+
+### Sequence Diagrams
+
+The system behaviour is captured in two sequence diagrams that separate the core real-time sensing loop from system management and user interaction.
+
+**Core IoT Monitoring & Control Loop** — illustrates the sensing cycle executed by the ESP8266 every 5 seconds: reading sensors, running the two embedded ML classifiers, passing the result through the multi-layer decision pipeline (safety layer → mode selection → command override), activating relays, and publishing telemetry to the MQTT broker. The diagram also shows the local-cache sync path that recovers buffered records when Wi-Fi reconnects.
+
+![Sequence Diagram — Core IoT Loop](images/sequence-diagram-core-loop.png)
+
+**System Management & User Interaction** — illustrates remote configuration updates (mode, thresholds), manual actuator override commands, and the watchdog safety mechanism that reverts the device to AUTO mode if backend communication is lost.
+
+![Sequence Diagram — System Management & Control](images/sequence-diagram-management.png)
 
 ### Edge Firmware (`edge_firmware/`)
 
@@ -284,6 +331,17 @@ The operator interacts with the system through:
 - Every 5 seconds: reads DHT11 and the capacitive soil sensor, runs `classifyPlantHealth()` and `classifyActuator()` (both compiled from `plant_classifier.h` / `actuator_classifier.h` — C headers auto-generated from Python scikit-learn models), publishes three MQTT messages.
 - Subscribes to `mushroom-farm/rack-1/config` and `mushroom-farm/rack-1/command` to receive mode changes and manual actuator commands from the backend.
 - **Priority chain**: Hardware safety floor > Explicit command (CMD_ON/OFF) > Control mode logic > AI classification.
+
+### Local Caching & Offline Resilience
+
+A key reliability feature of the firmware is its ability to operate fully offline. When Wi-Fi or MQTT connectivity is unavailable:
+
+1. The sensing cycle continues at the normal 5-second interval.
+2. Each reading (sensor values, AI classification, actuator state, timestamp) is pushed into a local **FIFO buffer** in ESP8266 RAM.
+3. The hardware safety layer and AI classifiers continue making and applying actuator decisions locally without any cloud dependency.
+4. When connectivity is restored, the buffer is flushed to the MQTT broker in order and cleared from local storage.
+
+This ensures zero crop-risk gaps during typical Wi-Fi outages (the buffer holds up to 120 records — approximately 10 minutes of readings at the 5-second interval).
 
 ### AI Model Training (`ai_analytics/`)
 
@@ -310,15 +368,20 @@ The operator interacts with the system through:
 - Pages: **Dashboard** (metric cards, AI stage badge), **Environment** (time-series charts), **Devices** (relay toggles), **Control** (mode selector), **Digital Twin** (Three.js 3D model), **Login**.
 - Dark theme (Slate-900 background), JetBrains Mono for live values, semantic colour coding (green / amber / red).
 
-### Simulator (`simulator/`)
-
-- Node.js script that publishes synthetic sensor data to the same MQTT topics.
-- Used during development and demo when physical hardware is unavailable.
-- Supports a `sim_mode` toggle exposed via the web UI to switch the backend between live hardware and simulator.
-
 ---
 
 ## 9. Results and Demo
+
+### STA Risk Coverage
+
+All four operational risks identified in the STA were directly mitigated in the implementation:
+
+| STA Risk | Mitigation Delivered |
+|---|---|
+| Wi-Fi disconnection | Local FIFO cache buffers readings during outage; auto-syncs on reconnect — validated by disconnecting the router mid-session and confirming data recovery |
+| Backend config failure | Watchdog timer reverts device to AUTO mode after timeout — confirmed by stopping the backend and observing the device self-recover |
+| Incorrect manual commands | Hardware safety floor overrides any command when thresholds are exceeded — tested by sending CMD_OFF while soil moisture was below minimum |
+| Cloud service unavailability | Edge AI and safety layer continued operating with MQTT broker disconnected; actuator decisions remained correct throughout |
 
 ### Sensor Reading Accuracy
 
@@ -343,13 +406,54 @@ Cross-validation (5-fold stratified) confirmed no significant overfitting.
 | Socket.IO → dashboard update | ~10 ms |
 | **Total sensor-to-screen** | **~100–170 ms** |
 
+### Physical Prototype
+
+The greenhouse was simulated using a clear acrylic box (6 mica panels joined with adhesive, hinged ceiling for easy access). Two cooling fans are mounted through drilled holes in the side walls; the water pump feeds a misting nozzle inside the enclosure. The breadboard, relay board, and ESP8266 are attached to the outer wall.
+
+![Physical Prototype](images/prototype-photo.jpg)
+
+### System Interfaces
+
+**Login** — JWT-protected entry point; prevents anonymous access to device controls.
+
+![Login Page](images/ui-login.png)
+
+**Dashboard** — Live metric cards (air temperature, humidity, soil moisture), actuator relay state (fan / pump ON/OFF), and current AI health classification badge.
+
+![Dashboard](images/ui-dashboard.png)
+
+**Environment** — Time-series charts for all three sensor channels updated every 5 seconds via Socket.IO.
+
+![Environment Page](images/ui-environment.png)
+
+**Devices** — Real-time relay state with full state-change history log (timestamp, fan state, pump state).
+
+![Devices Page](images/ui-devices.png)
+
+**AI Health** — Current health status badge (healthy / warning / critical), per-status reading counts, status timeline bar chart, and transition history table.
+
+![AI Health Page](images/ui-ai-health.png)
+
+**Control** — Remote actuator control (AUTO / Force ON / Force OFF per device), actuator mode selector (OFF / AUTO / MANUAL), and active configuration display.
+
+![Control Page](images/ui-control.png)
+
+**3D Digital Twin** — Three.js scene that mirrors the physical greenhouse: fan animation when relay is active, colour-coded plant health, and a simulation mode for testing threshold configurations before deploying to hardware.
+
+![3D Digital Twin](images/ui-3d-twin.png)
+
 ### Demo Evidence
 
-- The simulator publishes a scenario where temperature rises from 26 °C to 38 °C over 2 minutes; the dashboard transitions from `healthy` (green) → `warning` (amber) → `critical` (red) and the relay state card shows fan ON.
+- When soil moisture drops below the threshold the water pump activates automatically (visible in Devices page history) and the Dashboard relay card switches to ON.
+- The AI Health page transitions from `healthy` (green) → `warning` (amber) → `critical` (red) as environmental readings deteriorate.
 - The 3D digital twin visually reflects the fan rotation state and changes colour based on the AI health classification.
 - Manual override via the Control page demonstrates that CMD_ON overrides AUTO classification, and the watchdog returns control to AUTO after the timer expires.
 
-Screenshots are available in `../images/`.
+### Demo Video
+
+<video src="images/demo.mp4" controls width="100%">
+  <a href="images/demo.mp4">▶ Download / Watch Demo Video</a>
+</video>
 
 ---
 
@@ -365,8 +469,12 @@ Screenshots are available in `../images/`.
 | **Environment variables** | Backend secrets (Supabase URL, JWT secret) kept in `.env`, not committed; `.env.example` provided |
 | **CORS** | Backend restricts `allow_origins` to known frontend origins |
 | **No personal data** | The system collects only environmental sensor readings; no personally identifiable information is stored |
+| **Password storage** | User passwords are stored as bcrypt hashes in Supabase; no plaintext credentials in the database |
+| **Database access control** | Backend uses Supabase `service_role` key (kept in `.env`, never committed); all direct public/anon access to tables is blocked |
 
 **Known limitations**: The MQTT broker credentials are embedded in firmware as plaintext `#define` macros — a device compromise would expose them. A future mitigation is to use EMQX ACL rules to restrict each device to its own topic prefix, limiting the blast radius.
+
+> **Note**: The security architecture described above is fully implemented in the codebase but was not covered in the project demo presentation. This section documents the security posture for completeness.
 
 ### Ethics
 
@@ -396,7 +504,7 @@ Screenshots are available in `../images/`.
 3. **OTA firmware updates** using the Arduino OTA library or ESP-IDF.
 4. **Edge AI enhancement**: Upgrade to a small LSTM model for anomaly prediction (predicting `critical` events 10–15 minutes in advance).
 5. **Battery + solar backup** for remote deployments without reliable mains power.
-6. **Supabase Row-Level Security** and field-level encryption for multi-tenant farm management.
+6. **Supabase Row-Level Security (RLS) policies** for multi-tenant farm management — currently the backend uses `service_role` key which bypasses RLS entirely; per-user/per-rack access policies should be added before any multi-tenant deployment.
 7. **Vietnamese UI localisation**.
 8. **Camera integration**: Add an ESP32-CAM for visual mould detection using a MobileNet-based classifier.
 
@@ -406,7 +514,10 @@ Screenshots are available in `../images/`.
 
 | Student ID | Full Name | GitHub Username | Role | Main Contributions |
 |---|---|---|---|---|
-| *(to be filled)* | *(to be filled)* | *(to be filled)* | *(to be filled)* | *(to be filled)* |
+| 2540007 | Duong Tan Binh | *(to be filled)* | *(to be filled)* | *(to be filled)* |
+| 2540002 | Nguyen Nhat Anh | *(to be filled)* | *(to be filled)* | *(to be filled)* |
+| 2540047 | Dao Hoang Dung | *(to be filled)* | *(to be filled)* | *(to be filled)* |
+| ES.2540023 | Nicolas Foo Cheung | *(to be filled)* | *(to be filled)* | *(to be filled)* |
 
 ---
 

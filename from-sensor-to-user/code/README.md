@@ -10,7 +10,6 @@ code/
 ├── ai_analytics/       ML model training scripts and exported C headers
 ├── backend/            Python FastAPI + Socket.IO backend
 ├── frontend/           React 18 + Vite web dashboard
-├── simulator/          Node.js MQTT data simulator
 └── README.md           (this file)
 ```
 
@@ -65,15 +64,7 @@ cp .env.example .env.local
 npm install
 ```
 
-### 3. Simulator (optional — if no physical hardware)
-
-```bash
-cd simulator
-npm install
-cp .env.example .env  # or edit index.js MQTT settings directly
-```
-
-### 4. Edge Firmware
+### 3. Edge Firmware
 
 ```bash
 cd edge_firmware
@@ -115,12 +106,6 @@ npm run dev
 # App at http://localhost:5173
 ```
 
-**Terminal 3 — Simulator** (if no ESP8266 hardware)
-```bash
-cd simulator
-node index.js
-```
-
 ---
 
 ## Main Files
@@ -141,7 +126,6 @@ node index.js
 | `frontend/src/hooks/useSocket.js` | Socket.IO lifecycle hook |
 | `frontend/src/store/useGreenhouseStore.js` | Zustand store for sensor data and history |
 | `frontend/src/pages/TwinPage.jsx` | 3D digital twin with Three.js |
-| `simulator/index.js` | MQTT synthetic data publisher |
 
 ---
 
@@ -173,7 +157,6 @@ VITE_BACKEND_URL=http://localhost:8000
 
 ## Demo Notes
 
-- The **simulator** publishes realistic time-series data including a temperature spike scenario to demonstrate the `healthy → warning → critical` transition.
 - The **3D digital twin** on the TwinPage reflects the current health status colour and animates fans when the relay is ON.
 - The **Control page** allows switching between OFF / AUTO / MANUAL modes and issuing direct actuator commands.
 - The **AI page** shows the classification history chart with colour-coded stage badges.
