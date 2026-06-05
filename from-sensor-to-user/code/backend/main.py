@@ -18,7 +18,7 @@ def create_app() -> socketio.ASGIApp:
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origins_list,
+        allow_origins=["*"],   # allow web + mobile (React Native has no Origin)
         allow_methods=["*"],
         allow_headers=["*"],
     )

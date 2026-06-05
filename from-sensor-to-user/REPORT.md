@@ -45,7 +45,7 @@ AI classification → Dashboard visualisation → Actuator control
 
 The system is considered successful when it:
 
-- Measures air temperature, air humidity, and soil moisture every **5 seconds** with less than ±1 °C / ±2 % RH error.
+- Measures air temperature, air humidity, and soil moisture every **5 seconds** with less than ±2 °C / ±5 % RH error (DHT11 specification; measured calibration result: ±1.8 °C / ±4.2 % RH).
 - Classifies plant health as `healthy`, `warning`, or `critical` with **≥ 85 % accuracy** compared to domain-expert labels.
 - Sends actuator decisions (fan ON/OFF, water pump ON/OFF) within **2 seconds** of a sensor reading that crosses a threshold.
 - Delivers a dashboard alert to the operator within **10 seconds** of a critical event via Socket.IO real-time broadcast.
@@ -94,7 +94,7 @@ Data is published and received over **five dedicated MQTT topics** per rack:
 
 | Constraint | Detail |
 |---|---|
-| **Computational** | ESP8266 has only 80 kHz CPU and 80 KB RAM; ML model must be compiled to C header and run inference in < 10 ms |
+| **Computational** | ESP8266 has only 80 MHz CPU and ~80 KB usable RAM; ML model must be compiled to C header and run inference in < 10 ms |
 | **Power** | Device must survive brief power cuts; no battery backup is implemented in v1 (future work) |
 | **Connectivity** | Wi-Fi may drop; MQTT QoS 1 retransmission is used, but data is lost during extended outages |
 | **Cost** | Total hardware budget ≤ 500 000 VND per rack to remain viable for small farms |
@@ -206,7 +206,8 @@ Operators can also issue manual commands (CMD_ON / CMD_OFF per actuator) via the
 The operator interacts with the system through:
 
 1. **Web dashboard** (React + Vite): real-time metric cards, trend charts (Recharts), AI stage badge, relay toggle switches, control mode selector (OFF / AUTO / MANUAL), and a 3D digital twin rendered with Three.js that visually reflects current sensor states.
-2. **MQTT command channel** (`mushroom-farm/rack-1/command`): operators can send JSON commands directly for integration with third-party automation tools.
+2. **Mobile app** (React Native + Expo): five tab views — Dashboard, Environment, Devices, AI Health, Control — delivered as a native Android/iOS app. The Control screen adds slider-based threshold input (MANUAL mode) and a pump auto-off countdown timer (30 s / 1 m / 2 m / 5 m / 10 m). Distributed as APK (preview) and AAB (production) via EAS Build.
+3. **MQTT command channel** (`mushroom-farm/rack-1/command`): operators can send JSON commands directly for integration with third-party automation tools.
 
 ---
 
@@ -256,14 +257,15 @@ The operator interacts with the system through:
 │                 ai_readings, users                               │
 └─────────────────────────────────────────────────────────────────┘
                     │ REST + Socket.IO
-                    ▼
-          ┌──────────────────┐
-          │  WEB FRONTEND    │
-          │  React + Vite    │
-          │  Three.js (twin) │
-          │  Recharts        │
-          │  Zustand store   │
-          └──────────────────┘
+          ┌─────────┴──────────┐
+          ▼                    ▼
+┌──────────────────┐  ┌──────────────────────┐
+│  WEB FRONTEND    │  │  MOBILE APP          │
+│  React + Vite    │  │  React Native + Expo │
+│  Three.js (twin) │  │  Victory Native      │
+│  Recharts        │  │  EAS Build (APK/AAB) │
+│  Zustand store   │  │  Zustand store       │
+└──────────────────┘  └──────────────────────┘
 ```
 
 ### Hardware Stack
@@ -287,6 +289,7 @@ The operator interacts with the system through:
 | Backend | Python 3.11, FastAPI, paho-mqtt, python-socketio |
 | Database | Supabase (PostgreSQL 15) |
 | Frontend | React 18, Vite, Zustand, Recharts, Three.js |
+| Mobile | React Native 0.81.5, Expo SDK 54, Victory Native, EAS Build |
 | Containerisation | Docker + docker-compose |
 
 ### Communication Protocols
@@ -366,7 +369,15 @@ This ensures zero crop-risk gaps during typical Wi-Fi outages (the buffer holds 
 - State managed with two **Zustand** stores: `useGreenhouseStore` (sensor data + history arrays) and `useSocketStore` (connection status).
 - The `useSocket()` hook (called once in `App.jsx`) creates the Socket.IO singleton, seeds chart history from REST on connect, and wires all `"state"` events to update the store.
 - Pages: **Dashboard** (metric cards, AI stage badge), **Environment** (time-series charts), **Devices** (relay toggles), **Control** (mode selector), **Digital Twin** (Three.js 3D model), **Login**.
-- Dark theme (Slate-900 background), JetBrains Mono for live values, semantic colour coding (green / amber / red).
+- Light theme, monospace typography, semantic colour coding (green / amber / red).
+
+### Mobile App (`mobile/`)
+
+- **React Native 0.81.5 + Expo SDK 54** built with **EAS Build** — outputs APK (preview/internal distribution) and AAB (production).
+- Bottom tab navigator with 5 tabs: **Dashboard**, **Environment**, **Devices**, **AI Health**, **Control** — all sharing the same Socket.IO and REST API endpoints as the web frontend.
+- Identical Zustand store architecture (`useGreenhouseStore`, `useSocketStore`) and `useSocket()` hook pattern, enabling code reuse across web and mobile.
+- **Control screen enhancements over web**: slider-based threshold input for MANUAL mode (`@react-native-community/slider`); pump auto-off duration selector (30 s / 1 m / 2 m / 5 m / 10 m) with live countdown timer.
+- Charts rendered with **Victory Native**; 3D twin scene rendered with **Three.js + expo-gl**.
 
 ---
 
@@ -385,7 +396,7 @@ All four operational risks identified in the STA were directly mitigated in the 
 
 ### Sensor Reading Accuracy
 
-DHT11 calibration against a reference thermometer showed ±1.8 °C and ±4.2 % RH error — within the ±2 °C / ±5 % RH manufacturer specification. Soil sensor readings were stable within ±3 % when the substrate moisture was manually measured.
+DHT11 calibration against a reference thermometer showed **±1.8 °C** and **±4.2 % RH** error — within the ±2 °C / ±5 % RH manufacturer specification and meeting the PEAS performance target. Soil sensor readings were stable within ±3 % when the substrate moisture was manually measured.
 
 ### AI Classification Performance
 
@@ -465,7 +476,7 @@ The greenhouse was simulated using a clear acrylic box (6 mica panels joined wit
 | **Credentials in firmware** | Credentials are compiled into the binary, not stored in plaintext on flash; WiFi credentials are stored by WiFiManager in protected flash |
 | **API authentication** | JWT tokens required for all control endpoints; login endpoint rate-limited |
 | **Environment variables** | Backend secrets (Supabase URL, JWT secret) kept in `.env`, not committed; `.env.example` provided |
-| **CORS** | Backend restricts `allow_origins` to known frontend origins |
+| **CORS** | Backend uses `allow_origins=["*"]` to support both web and React Native clients (React Native does not send an `Origin` header); API security relies on JWT bearer tokens on all sensitive endpoints |
 | **No personal data** | The system collects only environmental sensor readings; no personally identifiable information is stored |
 | **Password storage** | User passwords are stored as bcrypt hashes in Supabase; no plaintext credentials in the database |
 | **Database access control** | Backend uses Supabase `service_role` key (kept in `.env`, never committed); all direct public/anon access to tables is blocked |

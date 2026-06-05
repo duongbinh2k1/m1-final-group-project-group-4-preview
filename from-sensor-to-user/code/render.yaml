@@ -1,0 +1,39 @@
+services:
+  # ── Backend: FastAPI + MQTT + Socket.IO ──────────────────────────────────────
+  - type: web
+    name: mushroom-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    envVars:
+      - key: MQTT_BROKER
+        value: broker.emqx.io
+      - key: MQTT_PORT
+        value: 1883
+      - key: MQTT_TOPIC_PREFIX
+        value: mushroom-farm
+      - key: SERVER_HOST
+        value: 0.0.0.0
+      - key: SERVER_PORT
+        value: 8000
+      # Set this after the frontend is deployed:
+      # https://dashboard.render.com → mushroom-backend → Environment
+      - key: CORS_ORIGINS
+        sync: false
+
+  # ── Frontend: React/Vite static site ─────────────────────────────────────────
+  - type: web
+    name: mushroom-frontend
+    runtime: static
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      # Set this to your backend URL after it is deployed:
+      # https://dashboard.render.com → mushroom-frontend → Environment
+      - key: VITE_BACKEND_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
