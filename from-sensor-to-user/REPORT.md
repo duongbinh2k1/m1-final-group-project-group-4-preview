@@ -453,6 +453,32 @@ The greenhouse was simulated using a clear acrylic box (6 mica panels joined wit
 
 ![3D Digital Twin](images/ui-3d-twin.png)
 
+### Mobile App Interfaces
+
+**Login** — JWT-protected sign-in screen, same credential system as web.
+
+![Mobile Login](images/mobile_login_ui.jpg)
+
+**Dashboard** — Live metric cards (air temp, humidity, soil), relay state (fan / pump ON/OFF), AI health badge, and real-time connection status (WS + MQTT).
+
+![Mobile Dashboard](images/mobile_dashboard_ui.jpg)
+
+**Environment** — Per-channel time-series charts (Victory Native) with current reading and history table below.
+
+![Mobile Environment](images/mobile_environmnent_ui.jpg)
+
+**Devices** — Relay state cards with trigger condition hints and full state-change history log.
+
+![Mobile Devices](images/mobile_devices_ui.jpg)
+
+**AI Health** — Current status badge, distribution breakdown (healthy / warning / critical %), status timeline bar chart, and transition history table.
+
+![Mobile AI Health](images/mobile_ai_health_ui.jpg)
+
+**Control** — Remote actuator toggle (AUTO / Force ON / Force OFF), pump auto-off duration selector (30 s – 10 m), actuator mode selector (OFF / AUTO / MANUAL), and APPLY_CONFIG button.
+
+![Mobile Control](images/mobile_control_ui.jpg)
+
 ### Demo Evidence
 
 - When soil moisture drops below the threshold the water pump activates automatically (visible in Devices page history) and the Dashboard relay card switches to ON.
