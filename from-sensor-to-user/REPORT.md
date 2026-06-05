@@ -216,46 +216,46 @@ The operator interacts with the system through:
 ### Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────────┐
 │  EDGE LAYER (Physical Hardware)                                  │
 │                                                                  │
 │  DHT11 ─┐                                                        │
 │          ├─► ESP8266 (Arduino/PlatformIO)                        │
-│  Soil  ─┘    │  • Decision Tree inference (C header)            │
+│  Soil  ─┘    │  • Decision Tree inference (C header)             │
 │              │  • WiFiManager                                    │
-│              │  • MQTT/TLS → EMQX Cloud (8883)                  │
+│              │  • MQTT/TLS → EMQX Cloud (8883)                   │
 │              │  • Safety floor watchdog                          │
-│              ▼                                                    │
-│       Relay board → Fan × 2, Water Pump                         │
-└─────────────────────────────────────────────────────────────────┘
+│              ▼                                                   │
+│       Relay board → Fan × 2, Water Pump                          │
+└──────────────────────────────────────────────────────────────────┘
                               │ MQTT (TLS)
                               ▼
-┌─────────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────────┐
 │  CLOUD BROKER                                                    │
-│  EMQX Cloud — Southeast Asia region                             │
-│  Topics: mushroom-farm/rack-1/{environment,ai,devices,          │
+│  EMQX Cloud — Southeast Asia region                              │
+│  Topics: mushroom-farm/rack-1/{environment,ai,devices,           │
 │           config,command}                                        │
-└─────────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────────┘
                               │ paho-mqtt subscribe
                               ▼
-┌─────────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────────┐
 │  BACKEND (Python / FastAPI + Socket.IO)                          │
 │                                                                  │
-│  MQTT thread ──► AppStore (in-memory deques, 200 records)       │
+│  MQTT thread ──► AppStore (in-memory deques, 200 records)        │
 │                      │                                           │
 │              ┌───────┴────────┐                                  │
 │              ▼                ▼                                  │
-│         REST API         Socket.IO                              │
-│    /api/state             "state" event                         │
-│    /api/history/*         broadcast                             │
+│         REST API         Socket.IO                               │
+│    /api/state             "state" event                          │
+│    /api/history/*         broadcast                              │
 │    /api/health                                                   │
-│    /api/control/*     ◄── control commands                      │
+│    /api/control/*     ◄── control commands                       │
 │              │                                                   │
 │              ▼                                                   │
 │         Supabase (PostgreSQL)                                    │
-│         Tables: environment_readings, device_states,            │
+│         Tables: environment_readings, device_states,             │
 │                 ai_readings, users                               │
-└─────────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────────┘
                     │ REST + Socket.IO
           ┌─────────┴──────────┐
           ▼                    ▼
