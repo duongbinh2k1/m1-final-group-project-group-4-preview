@@ -4,7 +4,7 @@
 
 | Student ID | Full Name | GitHub Username | Role | Main Contributions |
 |---|---|---|---|---|
-| *(fill in)* | *(fill in)* | *(fill in)* | Team Lead / Backend | MQTT pipeline, FastAPI backend, Supabase integration |
-| *(fill in)* | *(fill in)* | *(fill in)* | Embedded / Firmware | ESP8266 firmware, PlatformIO, sensor integration |
-| *(fill in)* | *(fill in)* | *(fill in)* | Frontend | React dashboard, Three.js digital twin |
-| *(fill in)* | *(fill in)* | *(fill in)* | AI / Data | ML model training, C header export, dataset analysis |
+| 2540002 | Nguyễn Nhật Anh  | anhnn-usth  | Team Leader | Team Monitor, Firmware, report |
+| 2540007 | Dương Tấn Bình | duongbinh2k1 | Tech Leader | Fullstack, Security, report |
+| 2540047 | Đào Hoàng Dũng |  akashi0310 | dev | AI, firmware, report |
+| ES.2540023 | Nicolas Foo Cheung | kkkipu | dev | Firmware, hardware setup, report |
