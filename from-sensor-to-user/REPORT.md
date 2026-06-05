@@ -346,6 +346,28 @@ A key reliability feature of the firmware is its ability to operate fully offlin
 
 This ensures zero crop-risk gaps during typical Wi-Fi outages (the buffer holds up to 120 records — approximately 10 minutes of readings at the 5-second interval).
 
+### Edge AI Design Justification
+
+This system runs AI inference **on-device (ESP8266)** rather than in the cloud. This was a deliberate architectural choice with concrete benefits and acknowledged responsibilities.
+
+**Why Edge AI:**
+
+| Factor | Cloud inference | Edge AI (chosen) |
+|---|---|---|
+| Latency | 100–500 ms round-trip | < 1 ms (local inference) |
+| Offline operation | ❌ Stops when Wi-Fi drops | ✅ Continues without cloud |
+| Privacy | Sensor data leaves the device | Data stays on-device until published |
+| Hardware cost | Requires always-on connectivity | Works on ESP8266, < 500 000 VND |
+| Model update | Easy (redeploy backend) | Requires firmware reflash |
+
+The decisive factor was **reliability under intermittent connectivity** — the primary constraint of rural Vietnamese agricultural deployments. A cloud-only classifier would fail to protect crops every time Wi-Fi dropped, making it unacceptable for the use case.
+
+**Responsibilities of this choice:**
+
+- **Model accuracy is fixed at flash time**: Unlike a cloud model that can be retrained continuously, the on-device Decision Tree cannot be updated without a firmware reflash. The team accepts responsibility for validating the model thoroughly before deployment and for documenting the re-training process.
+- **Computational constraints limit model complexity**: The ESP8266's 80 MHz CPU and ~80 KB RAM restrict inference to shallow decision trees or small rule sets. More complex models (Random Forest, neural networks) cannot run on-device. The team chose accuracy within hardware constraints over theoretical maximum accuracy.
+- **Transparency obligation**: Because the model runs without human oversight during operation, the team chose an interpretable model (Decision Tree, exported as `if/else` C code) rather than a black-box classifier — ensuring any farm worker or auditor can inspect the decision logic in `plant_classifier.h`.
+
 ### AI Model Training (`ai_analytics/`)
 
 - Dataset: UCI Plant Health dataset (8 000+ labelled samples, features: `temperature`, `air_humidity`, `soil_moisture`).
@@ -382,6 +404,20 @@ This ensures zero crop-risk gaps during typical Wi-Fi outages (the buffer holds 
 ---
 
 ## 9. Results and Demo
+
+### Testing Plan
+
+The system was validated across four test dimensions:
+
+| # | What was tested | Method | Pass criterion |
+|---|---|---|---|
+| **T1** Sensor accuracy | DHT11 temperature and humidity readings | Compared against a calibrated reference thermometer and hygrometer over 30 minutes in stable conditions | Error < ±2 °C / ±5 % RH (DHT11 spec) |
+| **T2** AI classification | Plant health classifier and actuator classifier | Held-out test set (20 % of UCI dataset, 1 600+ samples); 5-fold cross-validation | Accuracy ≥ 85 % |
+| **T3** End-to-end latency | Sensor read → MQTT publish → backend receive → Socket.IO → dashboard update | Timestamped at each stage using server logs and browser DevTools | Total < 500 ms |
+| **T4** Offline resilience | Local cache during Wi-Fi outage + auto-sync on reconnect | Disconnected the Wi-Fi router mid-session for 3 minutes; verified cached records flushed to backend on reconnect | Zero data loss; all cached readings recovered |
+| **T5** Safety floor override | Hardware safety layer overrides manual CMD_OFF | Sent CMD_OFF via dashboard while soil moisture was artificially set below `SAFETY_SOIL_MIN = 10 %` | Pump remained ON regardless of command |
+| **T6** Watchdog fallback | Device reverts to AUTO mode when backend goes silent | Stopped the backend process; waited > 5 minutes | Device auto-reverted to AUTO and logged the watchdog event |
+| **T7** Authentication | JWT required for all control endpoints | Attempted control API calls without token and with expired token | 401 returned; no actuator commands executed |
 
 ### STA Risk Coverage
 
