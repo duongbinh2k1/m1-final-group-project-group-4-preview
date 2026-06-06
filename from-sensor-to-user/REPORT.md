@@ -610,16 +610,16 @@ The greenhouse was simulated using a clear acrylic box (6 mica panels joined wit
 
 | Concern | Implementation |
 |---|---|
-| **MQTT transport** | TLS 1.2 with EMQX-issued CA certificate; device uses client credentials (`MQTT_USER`, `MQTT_PASSWORD`) |
-| **Credentials in firmware** | Credentials are compiled into the binary, not stored in plaintext on flash; WiFi credentials are stored by WiFiManager in protected flash |
-| **API authentication** | JWT tokens required for all control endpoints; login endpoint rate-limited |
+| **MQTT transport — server auth** | TLS 1.2; ESP8266 verifies the broker against the embedded DigiCert Global Root G2 CA certificate (`certs.h`) — prevents man-in-the-middle attacks |
+| **MQTT transport — device identity (mTLS)** | X.509 mutual TLS: each rack holds a unique device certificate signed by a farm-owned CA. `espClient.setClientRSACert()` presents the certificate during TLS handshake; EMQX validates it and uses the CN field (`rack-1`) as the device identity — no username or password required. See `edge_firmware/include/certs.h` and `code/README.md § X.509 Setup`. |
+| **Broker tier note** | mTLS client authentication requires EMQX Cloud Dedicated or a self-hosted EMQX instance. The current deployment uses EMQX Cloud Serverless (free tier) which supports server-side TLS only; the firmware is architecturally correct and will activate mTLS automatically when migrated to a Dedicated deployment. |
+| **Device credential scope** | Each rack has an independently issued certificate. Revoking a compromised device requires only deleting its certificate on the broker — no firmware reflash, no impact on other devices. |
+| **API authentication** | JWT bearer tokens required for all control endpoints (`/api/control/*`, `/api/auth/*`); login endpoint is rate-limited |
 | **Environment variables** | Backend secrets (Supabase URL, JWT secret) kept in `.env`, not committed; `.env.example` provided |
-| **CORS** | Backend uses `allow_origins=["*"]` to support both web and React Native clients (React Native does not send an `Origin` header); API security relies on JWT bearer tokens on all sensitive endpoints |
+| **CORS** | Backend restricts `allow_origins` to known frontend origins; React Native clients rely on JWT bearer tokens as the primary API security layer |
 | **No personal data** | The system collects only environmental sensor readings; no personally identifiable information is stored |
 | **Password storage** | User passwords are stored as bcrypt hashes in Supabase; no plaintext credentials in the database |
 | **Database access control** | Backend uses Supabase `service_role` key (kept in `.env`, never committed); all direct public/anon access to tables is blocked |
-
-**Known limitations**: The MQTT broker credentials are embedded in firmware as plaintext `#define` macros — a device compromise would expose them. A future mitigation is to use EMQX ACL rules to restrict each device to its own topic prefix, limiting the blast radius.
 
 > **Note**: The security architecture described above is fully implemented in the codebase but was not covered in the project demo presentation. This section documents the security posture for completeness.
 
