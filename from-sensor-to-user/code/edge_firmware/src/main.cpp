@@ -211,7 +211,8 @@ void reconnectMQTT()
         char clientBuf[32];
         snprintf(clientBuf, sizeof(clientBuf), "ESP8266Client-%04X", (uint16_t)random(0, 0xffff));
 
-        if (mqttClient.connect(clientBuf, MQTT_USER, MQTT_PASSWORD))
+        // mTLS: identity is proved by the client certificate — no username/password.
+        if (mqttClient.connect(clientBuf))
         {
             Serial.println("Connected!");
             mqttClient.subscribe(TOPIC_CONFIG);    // retained config from backend
@@ -336,9 +337,16 @@ void setup()
     connectToWiFi();          // blocks until WiFi is configured and connected
     syncNTPTime();
 
-    // TLS: verify broker certificate against embedded CA cert (DigiCert Global Root G2)
-    static BearSSL::X509List certList(EMQX_CA_CERT);
-    espClient.setTrustAnchors(&certList);
+    // TLS — server authentication: verify broker against DigiCert Global Root G2
+    static BearSSL::X509List caCertList(EMQX_CA_CERT);
+    espClient.setTrustAnchors(&caCertList);
+
+    // mTLS — client authentication: present device certificate to broker.
+    // EMQX Cloud validates this cert against the farm CA uploaded in the dashboard.
+    // The CN field ("rack-1") serves as the device identity — no username/password.
+    static BearSSL::X509List deviceCert(DEVICE_CERT);
+    static BearSSL::PrivateKey deviceKey(DEVICE_KEY);
+    espClient.setClientRSACert(&deviceCert, &deviceKey);
     
     mqttClient.setServer(MQTT_HOST, MQTT_PORT);
     mqttClient.setCallback(onMqttMessage);
