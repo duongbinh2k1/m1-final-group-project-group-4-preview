@@ -29,10 +29,17 @@ const unsigned long SAMPLING_INTERVAL = 5000;
 const int MAX_CACHE_SIZE = 120;
 
 // EMQX Cloud TLS — port 8883
+// Authentication: X.509 mutual TLS (mTLS) — client certificate, no username/password.
+// The device identity is verified by EMQX via the client certificate's CN field.
+// To provision a device:
+//   1. Generate a device key pair:  openssl genrsa -out device.key 2048
+//   2. Create CSR:                  openssl req -new -key device.key -out device.csr -subj "/CN=rack-1"
+//   3. Sign with your CA:           openssl x509 -req -in device.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out device.crt -days 3650
+//   4. Paste device.crt into certs.h as DEVICE_CERT
+//   5. Paste device.key into certs.h as DEVICE_KEY
+//   6. Configure EMQX Cloud: enable Mutual TLS, upload your CA cert
 const char *const MQTT_HOST = "ace2ba13.ala.asia-southeast1.emqxsl.com";
 const int         MQTT_PORT = 8883;
-#define MQTT_USER     "mushroom-esp8266"
-#define MQTT_PASSWORD "mushroom-esp8266"
 
 const char *const TOPIC_ENV     = "mushroom-farm/rack-1/environment";
 const char *const TOPIC_AI      = "mushroom-farm/rack-1/ai";
