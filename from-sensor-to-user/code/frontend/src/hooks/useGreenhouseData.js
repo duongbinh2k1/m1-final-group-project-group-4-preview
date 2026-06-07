@@ -35,6 +35,16 @@ export function useGreenhouseSnapshot() {
   }))
 }
 
+/** Weather forecast + proactive recommendations */
+export function usePrediction() {
+  return useGreenhouseStore((s) => s.prediction)
+}
+
+/** Log of auto-commands sent by the proactive scheduler */
+export function useScheduledActions() {
+  return useGreenhouseStore((s) => s.scheduledActions)
+}
+
 /** WebSocket + MQTT connection status */
 export function useConnectionStatus() {
   return useSocketStore((s) => ({

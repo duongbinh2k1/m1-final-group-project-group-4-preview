@@ -11,6 +11,8 @@ export const useGreenhouseStore = create((set) => ({
   ai:           null,   // { status: 'healthy' | 'warning' | 'critical' }
   control:      null,   // { mode: 'off'|'auto'|'manual', thresholds: {...} }
   lastUpdated:  null,   // ISO string
+  prediction:       null,   // { current_outside, predictions, recommendations, ... }
+  scheduledActions: [],    // log of auto-commands sent by proactive scheduler
 
   // ── History (last 200 records each) ─────────────────────────────────
   envHistory: [],
@@ -28,6 +30,8 @@ export const useGreenhouseStore = create((set) => ({
         ai:          payload.ai           ?? state.ai,
         control:     payload.control      ?? state.control,
         lastUpdated: payload.last_updated ?? state.lastUpdated,
+        prediction:       payload.prediction        ?? state.prediction,
+        scheduledActions: payload.scheduled_actions ?? state.scheduledActions,
       }
 
       // Append to history if we got fresh data

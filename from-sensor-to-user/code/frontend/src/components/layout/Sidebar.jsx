@@ -9,6 +9,7 @@ const NAV = [
   { to: '/devices',     label: 'Devices',     icon: '◉' },
   { to: '/ai',          label: 'AI Health',   icon: '◆' },
   { to: '/control',     label: 'Control',     icon: '⊡' },
+  { to: '/prediction',  label: 'Forecast',    icon: '◬' },
   { to: '/twin',        label: '3D Twin',     icon: '◳' },
 ]
 

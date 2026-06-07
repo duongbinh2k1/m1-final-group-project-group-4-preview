@@ -23,6 +23,11 @@ class AppStore:
         self.last_updated: Optional[datetime]           = None
         self.mqtt_status:  MQTTStatus                   = MQTTStatus.disconnected
 
+        # Weather forecast + proactive recommendations
+        self.prediction:        Optional[dict] = None
+        # Log of auto-commands sent by the proactive scheduler (newest first, max 20)
+        self.scheduled_actions: list           = []
+
         self.history_environment: deque = deque(maxlen=HISTORY_MAX)
         self.history_devices:     deque = deque(maxlen=HISTORY_MAX)
         self.history_ai:          deque = deque(maxlen=HISTORY_MAX)
@@ -42,6 +47,13 @@ class AppStore:
         self.last_updated = ts
         self.history_ai.append({"timestamp": ts.isoformat(), **payload.model_dump()})
 
+    def update_prediction(self, data: dict) -> None:
+        self.prediction = data
+
+    def add_scheduled_action(self, action: dict) -> None:
+        """Prepend action log entry; keep last 20."""
+        self.scheduled_actions = [action, *self.scheduled_actions[:19]]
+
     def update_control(self, payload: ControlPayload) -> None:
         self.control = payload
 
@@ -56,6 +68,8 @@ class AppStore:
             "control":      self.control.model_dump(mode="json"),
             "last_updated": self.last_updated.isoformat()             if self.last_updated else None,
             "mqtt_status":  self.mqtt_status.value,
+            "prediction":        self.prediction,
+            "scheduled_actions": self.scheduled_actions,
         }
 
 

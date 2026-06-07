@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"C:\\\\Users\\\\lapla\\\\OneDrive\\\\Desktop\\\\codespace\\\\master\\\\sensor to:*)",
+      "Bash(conda run:*)"
+    ]
+  }
+}

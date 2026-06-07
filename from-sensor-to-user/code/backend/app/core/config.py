@@ -30,6 +30,14 @@ class Settings(BaseSettings):
     telegram_bot_token: str = ""
     telegram_chat_id:   str = ""
 
+    # Outside weather location (Open-Meteo, free — no API key)
+    location_lat: float = 21.0285   # default: Hanoi
+    location_lon: float = 105.8542
+
+    # Proactive actuator control based on weather forecast
+    proactive_enabled:       bool = True   # set False to disable auto-commands
+    pump_pre_rain_duration:  int  = 1800   # seconds pump runs before rain (default 30 min)
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",")]

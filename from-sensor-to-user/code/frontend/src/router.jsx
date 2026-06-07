@@ -6,6 +6,7 @@ import { LoginPage }       from './pages/LoginPage'
 import { DashboardPage }   from './pages/DashboardPage'
 import { DevicesPage }     from './pages/DevicesPage'
 import { EnvironmentPage } from './pages/EnvironmentPage'
+import { PredictionPage }  from './pages/PredictionPage'
 
 // Three.js is large — load only when user visits the twin page
 const TwinPage = lazy(() => import('./pages/TwinPage').then(m => ({ default: m.TwinPage })))
@@ -32,6 +33,7 @@ export function AppRouter() {
       <Route path="/devices"     element={<DevicesPage />}     />
       <Route path="/ai"          element={<AIPage />}          />
       <Route path="/control"     element={<ControlPage />}     />
+      <Route path="/prediction"  element={<PredictionPage />}   />
       <Route path="/twin"        element={
         <Suspense fallback={<TwinFallback />}>
           <TwinPage />

@@ -5,14 +5,15 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { Text } from 'react-native'
 
-import { LoginScreen }       from './src/screens/LoginScreen'
-import { useAuthStore }      from './src/store/useAuthStore'
-import { DashboardScreen }   from './src/screens/DashboardScreen'
-import { EnvironmentScreen } from './src/screens/EnvironmentScreen'
-import { DevicesScreen }     from './src/screens/DevicesScreen'
-import { AIScreen }          from './src/screens/AIScreen'
-import { ControlScreen }     from './src/screens/ControlScreen'
-import { useSocket }         from './src/hooks/useSocket'
+import { LoginScreen }        from './src/screens/LoginScreen'
+import { useAuthStore }       from './src/store/useAuthStore'
+import { DashboardScreen }    from './src/screens/DashboardScreen'
+import { EnvironmentScreen }  from './src/screens/EnvironmentScreen'
+import { DevicesScreen }      from './src/screens/DevicesScreen'
+import { AIScreen }           from './src/screens/AIScreen'
+import { ControlScreen }      from './src/screens/ControlScreen'
+import { PredictionScreen }   from './src/screens/PredictionScreen'
+import { useSocket }          from './src/hooks/useSocket'
 
 const Tab = createBottomTabNavigator()
 
@@ -55,6 +56,8 @@ function AppNavigator() {
         options={{ tabBarLabel: 'ai_health',   tabBarIcon: ({ color }) => <TabIcon icon="◆" color={color} /> }} />
       <Tab.Screen name="Control"     component={ControlScreen}
         options={{ tabBarLabel: 'control',     tabBarIcon: ({ color }) => <TabIcon icon="⊡" color={color} /> }} />
+      <Tab.Screen name="Prediction"  component={PredictionScreen}
+        options={{ tabBarLabel: 'forecast',    tabBarIcon: ({ color }) => <TabIcon icon="◬" color={color} /> }} />
     </Tab.Navigator>
   )
 }
