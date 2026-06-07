@@ -69,6 +69,10 @@ export function useAI() {
   return useGreenhouseStore(useShallow((s) => ({ data: s.ai, history: s.aiHistory })))
 }
 
+export function usePrediction() {
+  return useGreenhouseStore((s) => s.prediction)
+}
+
 export function useConnectionStatus() {
   return useSocketStore(useShallow((s) => ({ status: s.status, mqttStatus: s.mqttStatus })))
 }

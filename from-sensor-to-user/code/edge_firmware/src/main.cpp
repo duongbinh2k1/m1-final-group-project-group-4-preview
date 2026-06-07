@@ -44,6 +44,7 @@ enum CmdState : int8_t { CMD_NONE = -1, CMD_OFF = 0, CMD_ON = 1 };
 
 CmdState      cmdFan        = CMD_NONE;
 CmdState      cmdPump       = CMD_NONE;
+unsigned long fanAutoOffAt  = 0;   // millis() target; 0 = no timer
 unsigned long pumpAutoOffAt = 0;   // millis() target; 0 = no timer
 
 // ─── Resolve actuator action ──────────────────────────────────────────────────
@@ -132,8 +133,14 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length)
 
         if (strcmp(device, "fan") == 0) {
             cmdFan = newState;
-            Serial.printf("[CMD] fan=%s (priority over mode)\n",
-                          newState == CMD_ON ? "FORCE_ON" : newState == CMD_OFF ? "FORCE_OFF" : "RELEASE");
+            if (newState == CMD_ON && dur > 0) {
+                fanAutoOffAt = millis() + (unsigned long)dur * 1000UL;
+                Serial.printf("[CMD] fan=FORCE_ON  auto-release in %ds\n", dur);
+            } else {
+                fanAutoOffAt = 0;
+                Serial.printf("[CMD] fan=%s\n",
+                              newState == CMD_ON ? "FORCE_ON" : newState == CMD_OFF ? "FORCE_OFF" : "RELEASE");
+            }
 
         } else if (strcmp(device, "pump") == 0) {
             cmdPump = newState;
@@ -355,9 +362,14 @@ void setup()
 
 void loop()
 {
-    // 0. PUMP AUTO-RELEASE TIMER
+    // 0. AUTO-RELEASE TIMERS
     // On expiry: release command (CMD_NONE) so mode logic resumes.
-    // NOT CMD_OFF — mode may legitimately keep pump running (e.g. dry soil in AUTO).
+    // NOT CMD_OFF — mode may legitimately keep the device running (e.g. dry soil / hot temp).
+    if (cmdFan == CMD_ON && fanAutoOffAt > 0 && millis() >= fanAutoOffAt) {
+        cmdFan      = CMD_NONE;
+        fanAutoOffAt = 0;
+        Serial.println("[CMD] Fan timer expired — released to mode logic.");
+    }
     if (cmdPump == CMD_ON && pumpAutoOffAt > 0 && millis() >= pumpAutoOffAt) {
         cmdPump       = CMD_NONE;
         pumpAutoOffAt = 0;

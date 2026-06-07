@@ -89,11 +89,11 @@ The action space is discrete:
 
 | Actuator | Function | Trigger condition |
 |---|---|---|
-| **Cooling fan (×2)** | Reduce `T` and improve airflow | `T > 30 °C` OR `H < 50 %` (AUTO mode); AI classification `critical` |
-| **Water mist pump** | Increase `M` and `H` | `M < 25 %` (AUTO mode); AI classification `warning` or `critical` |
+| **Cooling fan (×2)** | Reduce `T` and improve airflow | `T > 30 °C` OR `H < 50 %` (AUTO mode); AI classification `critical`; proactive pre-cool command when outside forecast `T > 35 °C` |
+| **Water mist pump** | Increase `M` and `H` | `M < 25 %` (AUTO mode); AI classification `warning` or `critical`; proactive pre-rain command when precipitation probability ≥ 40 % within 2 h |
 | **Dashboard alert** | Notify operator via Socket.IO (stage badge turns red, warning banner) | Any `critical` AI classification |
 
-Control modes supported: **OFF**, **AUTO** (AI-driven), **MANUAL** (threshold-based). A hardware safety floor overrides all modes when conditions reach the critical boundary (`M < 10 %` or `T > 40 °C`).
+Control modes supported: **OFF**, **AUTO** (AI-driven), **MANUAL** (threshold-based). A hardware safety floor overrides all modes when conditions reach the critical boundary (`M < 10 %` or `T > 40 °C`). A **proactive weather layer** issues timed pre-emptive commands to the fan and pump based on the 4-hour outside weather forecast fetched from the Open-Meteo API every 30 minutes.
 
 ### Sensors
 
@@ -286,12 +286,19 @@ The operator interacts with the system through:
 │                                                                  │
 │  MQTT thread ──► AppStore (in-memory deques, 200 records)        │
 │                      │                                           │
+│  Weather loop  ──► weather_fetcher (every 30 min)                │
+│  (asyncio task)      │  Open-Meteo API → forecast + current      │
+│                      │  weather_predictor → 5 decision rules     │
+│                      │  proactive_scheduler → MQTT commands      │
+│                      │  duration_calculator → physics formulas   │
+│                      │                                           │
 │              ┌───────┴────────┐                                  │
 │              ▼                ▼                                  │
 │         REST API         Socket.IO                               │
 │    /api/state             "state" event                          │
 │    /api/history/*         broadcast                              │
 │    /api/health                                                   │
+│    /api/prediction                                               │
 │    /api/control/*     ◄── control commands                       │
 │              │                                                   │
 │              ▼                                                   │
@@ -376,7 +383,8 @@ The system behaviour is captured in two sequence diagrams that separate the core
 - At boot: NTP time sync, WiFiManager portal for Wi-Fi credentials, TLS connection to EMQX Cloud using an embedded CA certificate (`certs.h`).
 - Every 5 seconds: reads DHT11 and the capacitive soil sensor, runs `classifyPlantHealth()` and `classifyActuator()` (both compiled from `plant_classifier.h` / `actuator_classifier.h` — C headers auto-generated from Python scikit-learn models), publishes three MQTT messages.
 - Subscribes to `mushroom-farm/rack-1/config` and `mushroom-farm/rack-1/command` to receive mode changes and manual actuator commands from the backend.
-- **Priority chain**: Hardware safety floor > Explicit command (CMD_ON/OFF) > Control mode logic > AI classification.
+- **Timed commands**: Both the fan and pump support a `duration` field in the command payload. The firmware stores a target timestamp (`fanAutoOffAt`, `pumpAutoOffAt`) computed as `millis() + duration × 1000`. Every `loop()` tick checks whether the target has been reached; on expiry the device is released back to `CMD_NONE` (mode logic resumes) rather than forced OFF — ensuring the active mode continues protecting crops after the timed command ends.
+- **Priority chain**: Hardware safety floor > Explicit command (CMD_ON/OFF with optional timer) > Control mode logic > AI classification.
 
 ### Local Caching & Offline Resilience
 
@@ -460,6 +468,90 @@ This approach is intentional: rather than imposing hardcoded domain thresholds (
 - REST routes: `/api/state`, `/api/health`, `/api/history/environment`, `/api/history/devices`, `/api/history/ai`, `/api/control/*`.
 - JWT authentication on control endpoints (login via `/api/auth/login`).
 - Environment variables managed via `.env` (not committed; `.env.example` provided).
+
+### Proactive Weather-Aware Control
+
+The system implements a **proactive control layer** that shifts actuator decisions from purely reactive (respond after a threshold is crossed) to predictive (act before the condition develops), using a 4-hour outside weather forecast.
+
+#### Data Source
+
+Outside weather is fetched every 30 minutes from the **Open-Meteo API** (free, no API key required) for the configured greenhouse location. Each API response provides current outside conditions and an hourly forecast interpolated to 8 × 30-minute steps covering the next 4 hours. Each forecast step contains:
+
+| Field | Description |
+|---|---|
+| `time_offset_min` | Minutes ahead (30, 60, … 240) |
+| `temp` | Outside air temperature (°C) |
+| `humidity` | Outside relative humidity (%) |
+| `precipitation_probability` | Chance of rain (0–100 %) |
+
+#### Decision Rules
+
+Five rules are evaluated in priority order by `weather_predictor.py`:
+
+| Priority | Condition | Action | Device |
+|---|---|---|---|
+| 1 | Outside `temp > 35 °C` expected | `pre_cool` — fan on 30 min early | Fan |
+| 2 | `precipitation_probability ≥ 40 %` | `reduce_fan` — shorten fan runtime | Fan |
+| 2 | `precipitation_probability ≥ 40 %` | `defer_pump` — water plants before rain arrives | Pump |
+| 3 | Temp drop `> 3 °C`, no rain | `reduce_fan` — cold front approaching | Fan |
+| 4 | Mild warming `1–3 °C` | `normal_auto` — auto mode sufficient | — |
+| 5 | Stable | `stable` — no action needed | — |
+
+Rules 2 and 3 do not send MQTT commands — they surface as recommendations on the Forecast page only. Rules 1 (`pre_cool`) and 2-pump (`defer_pump`) send timed MQTT commands to the ESP8266 via the existing `mushroom-farm/rack-1/command` topic.
+
+#### Physics-Based Duration Calculation
+
+Rather than using arbitrary fixed durations, the `duration_calculator.py` service derives run times from the physical parameters of the greenhouse.
+
+**Pump — Volumetric Water Content (VWC)**
+
+Based on the VWC definition (Topp et al., 1980): 1 % VWC change in 600 cm³ of soil requires 6 ml of water. With a pump flow rate of 1.66 ml/s (100 L/h):
+
+```
+K_pump = (V_soil × 0.01) / Q_pump = (600 × 0.01) / 1.66 ≈ 3.6 s / %VWC
+
+T_pump = (T_target − T_current) × K_pump
+```
+
+Example: soil at 20 %, target 50 % → T_pump = 30 × 3.6 = **108 seconds**.
+
+**Fan — Forced Ventilation Cooling (Newton's Law of Cooling)**
+
+The greenhouse is modelled as a well-mixed thermal system ventilated at airflow rate Q (Incropera & DeWitt, 2007; Albright, 1990). The energy balance gives a first-order ODE whose analytical solution is:
+
+```
+T(t) = T_outside + (T_inside − T_outside) × exp(−t / τ)
+
+where  τ = M_total / (Q × ρ_air × C_p,air)
+```
+
+Solving for the time to reach `T_target`:
+
+```
+T_fan = −τ × ln((T_target − T_outside) / (T_inside − T_outside))
+```
+
+The total thermal mass `M_total` accounts for both air and soil (which dominates due to its much larger heat capacity):
+
+| Component | Calculation | Value |
+|---|---|---|
+| Air | 0.027 m³ × 1.2 kg/m³ × 1005 J/(kg·°C) | ≈ 32.6 J/°C |
+| Soil | 0.78 kg × 1500 J/(kg·°C) | ≈ 1170 J/°C (Farouki, 1981) |
+| **Total M** | | **≈ 1202 J/°C** |
+
+With Q = 0.005 m³/s (≈10 CFM, typical small 5 V fan): τ ≈ 200 s.
+
+Example A — outside much cooler: inside = 34 °C, outside = 24 °C, target = 30 °C
+→ ratio = (30 − 24)/(34 − 24) = 0.6 → T_fan = −200 × ln(0.6) ≈ **102 seconds**.
+
+Example B — outside barely cooler: inside = 34 °C, outside = 32 °C, target = 30 °C
+→ ratio = (30 − 32)/(34 − 32) < 0 → outside cannot cool greenhouse to target → **fan skipped**.
+
+The formula correctly captures the physical intuition: the more cooling potential available from outside air, the shorter the fan needs to run. If outside air is warmer than the target temperature, the command is suppressed entirely.
+
+#### Proactive Scheduler
+
+`proactive_scheduler.py` is called after every forecast refresh. It reads real sensor values from the in-memory store (`store.environment`) and the latest outside temperature from the forecast (`store.prediction`) before computing durations. A per-hour deduplication key prevents the same action from being re-sent within the same hour, even though the forecast refreshes every 30 minutes.
 
 ### Frontend (`frontend/`)
 
@@ -649,35 +741,12 @@ The greenhouse was simulated using a clear acrylic box (6 mica panels joined wit
 1. **Upgrade sensors** to DHT22 + capacitive soil sensor with temperature compensation.
 2. **Expand to multiple racks** with per-rack dashboards.
 3. **OTA firmware updates** using the Arduino OTA library or ESP-IDF.
-4. **Edge AI enhancement**: Upgrade to a small LSTM model for anomaly prediction (predicting `critical` events 10–15 minutes in advance).
+4. **Edge AI enhancement**: Upgrade to a small anomaly detection model for predicting `critical` events 10–15 minutes in advance based on sensor trend trajectories.
 5. **Battery + solar backup** for remote deployments without reliable mains power.
 6. **Supabase Row-Level Security (RLS) policies** for multi-tenant farm management — currently the backend uses `service_role` key which bypasses RLS entirely; per-user/per-rack access policies should be added before any multi-tenant deployment.
 7. **Vietnamese UI localisation**.
 8. **Camera integration**: Add an ESP32-CAM for visual mould detection using a MobileNet-based classifier.
-
-#### Advanced Planned Feature: Proactive Weather-Aware Control
-
-The current system is a **reactive** controller: actuators respond only after environmental measurements cross threshold boundaries. A significant architectural advancement would be a **proactive** control regime that incorporates external meteorological forecasts to anticipate environmental changes before they occur — shifting the system from reactive to predictive operation.
-
-**Data source**: OpenWeatherMap One Call API 3.0 (forecast horizon: 24 h; resolution: 3 h intervals; parameters: `temp`, `humidity`, `rain.1h`, `pop` — probability of precipitation).
-
-**Predictive control rules** (to be evaluated by the backend on each forecast fetch):
-
-| Forecast condition | Proactive actuator adjustment |
-|---|---|
-| `rain_probability > 0.70` within next 3 h | Pre-reduce misting duty cycle by 30 % — ambient humidity will rise naturally as precipitation approaches, reducing the risk of over-watering and substrate waterlogging |
-| `T_forecast > 32 °C` within next 3 h | Activate pre-cooling: enable FAN 60 minutes before the predicted temperature peak to pre-lower the greenhouse air temperature |
-| `T_forecast < 18 °C` within next 3 h | Generate heating supplementation alert to the operator; optionally activate a heating element if available |
-
-**Mathematical model — predictive threshold adjustment:**
-
-The fan trigger threshold is dynamically adjusted as a function of the forecast gradient:
-
-`T'_fan = T_fan - α · (T_forecast - T_current) / Δt`
-
-where `T_fan = 28 °C` is the nominal fan activation temperature, `T_forecast` is the forecast temperature at the next 3 h interval, `T_current` is the present measured temperature, `Δt` is the forecast horizon in hours, and `α` is a dimensionless predictive gain factor (`0 < α ≤ 1`, empirically tuned). When the forecast predicts a positive thermal gradient (rising temperature), `T'_fan < T_fan`, causing the fan to engage earlier than it would under purely reactive control. When the gradient is negative, `T'_fan ≥ T_fan`, delaying fan engagement and conserving energy. The gain factor `α` caps the maximum threshold shift to avoid over-correction given forecast uncertainty.
-
-**Expected benefit**: Converting from reactive to proactive control reduces actuator overshoot — the transient period during which environmental conditions exceed safe boundaries while the control system responds — and decreases cumulative energy consumption by pre-positioning actuator states before stress conditions fully develop.
+9. **Fan airflow calibration**: The proactive cooling formula uses Q = 0.005 m³/s as a default fan airflow estimate. Measuring the actual fan CFM with an anemometer and updating `FAN_AIRFLOW_M3_PER_S` in `duration_calculator.py` would improve pre-cool duration accuracy.
 
 ---
 
@@ -705,6 +774,13 @@ where `T_fan = 28 °C` is the nominal fan activation temperature, `T_forecast` i
 
 5. Steadman, R.G. (1979). The assessment of sultriness. Part I: A temperature-humidity index based on human physiology and clothing science. *Journal of Applied Meteorology*, 18(7), 861–873. — Foundation for the temperature-humidity composite stress index `σ(T, H) = 0.7T + 0.3(100 − H)`; establishes the empirical 70/30 temperature–humidity weighting used in the firmware thermal stress computation.
 6. Rothfusz, L.P. (1990). *The heat index equation*. National Weather Service Technical Attachment SR 90-23. National Oceanic and Atmospheric Administration. — Formalisation of apparent temperature / heat index used as the basis for the predictive thermal threshold adjustment model.
+
+### Thermodynamics, Soil Physics, and Agricultural Engineering
+
+17. Topp, G.C., Davis, J.L. & Annan, A.P. (1980). Electromagnetic determination of soil water content: Measurements in coaxial transmission lines. *Water Resources Research*, 16(3), 574–580. — Definition and measurement of Volumetric Water Content (VWC); basis for the pump duration formula `T_pump = ΔM × K_pump`.
+18. Incropera, F.P. & DeWitt, D.P. (2007). *Fundamentals of Heat and Mass Transfer* (6th ed.). Wiley. — Forced convection heat transfer and the first-order thermal system model used to derive the fan pre-cool duration formula.
+19. Albright, L.D. (1990). *Environment Control for Animals and Plants*. American Society of Agricultural Engineers (ASAE). — Ventilation principles for enclosed agricultural structures; analytical basis for the well-mixed greenhouse cooling model.
+20. Farouki, O.T. (1981). *Thermal Properties of Soils*. CRREL Monograph 81-1. Cold Regions Research and Engineering Laboratory. — Thermal properties of moist soil; source for `C_p,soil ≈ 1500 J/(kg·°C)` used in the greenhouse thermal mass calculation.
 
 ### Machine Learning and Embedded Systems
 

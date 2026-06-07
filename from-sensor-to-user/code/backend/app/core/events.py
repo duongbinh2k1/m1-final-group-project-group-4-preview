@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from app.core.config import settings
 from app.services import supabase_db
 from app.services.mqtt import set_event_loop, start_mqtt_thread
+from app.services.weather_fetcher import start_weather_loop
 
 
 _DEFAULT_SECRET = "change-this-secret-key-in-production"
@@ -27,6 +28,9 @@ async def lifespan(app: FastAPI):
     loop = asyncio.get_running_loop()
     set_event_loop(loop)
     start_mqtt_thread()
+
+    # LSTM weather prediction loop (asyncio background task)
+    asyncio.create_task(start_weather_loop())
 
     print(f"\n🍄  Mushroom Backend ready")
     print(f"📡  MQTT  → {settings.mqtt_broker}:{settings.mqtt_port}")

@@ -6,6 +6,7 @@ export const useGreenhouseStore = create((set) => ({
   ai:          null,
   control:     null,
   lastUpdated: null,
+  prediction:  null,
   envHistory:  [],
   devHistory:  [],
   aiHistory:   [],
@@ -26,6 +27,9 @@ export const useGreenhouseStore = create((set) => ({
     if (payload.ai) {
       next.ai        = payload.ai
       next.aiHistory = [...state.aiHistory, payload.ai].slice(-200)
+    }
+    if (payload.prediction) {
+      next.prediction = payload.prediction
     }
     return next
   }),

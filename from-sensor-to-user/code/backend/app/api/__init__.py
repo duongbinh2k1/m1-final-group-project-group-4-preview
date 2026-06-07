@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.api.deps import require_auth
-from app.api.routes import ai, auth, control, devices, environment, health
+from app.api.routes import ai, auth, control, devices, environment, health, prediction
 
 api_router = APIRouter(prefix="/api")
 
@@ -15,3 +15,4 @@ api_router.include_router(environment.router,  **_protected)
 api_router.include_router(devices.router,      **_protected)
 api_router.include_router(ai.router,           **_protected)
 api_router.include_router(control.router,      **_protected)
+api_router.include_router(prediction.router,   **_protected)

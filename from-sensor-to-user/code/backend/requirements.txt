@@ -8,5 +8,5 @@ python-dotenv==1.1.0
 python-jose[cryptography]==3.3.0
 bcrypt>=4.0.0
 python-multipart==0.0.17
-# HTTP client — used by Supabase REST calls and Telegram notifier
+# HTTP client — used by Supabase REST calls, Telegram notifier, and Open-Meteo weather API
 httpx>=0.26.0
